@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes')
 const cookieParser = require ('cookie-parser')
 const bodyParser = require('body-parser');
-const {checkUser,requireAuth} = require("./middleware/authMiddware");
+const {currentUser,requireAuth} = require("./middleware/authMiddware");
 const app = express();
 
 // middleware
@@ -22,7 +22,8 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch((err) => console.log(err));
 
 // routes
-app.get('*', checkUser)//apply to every route
+app.get('*', currentUser)//apply to every route (protect routes)
 app.get('/', (req, res) => res.render('home'));
+
 app.get('/smoothies', requireAuth,(req, res) => res.render('smoothies'));
 app.use(authRoutes)

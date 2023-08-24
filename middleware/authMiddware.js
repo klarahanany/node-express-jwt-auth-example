@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const userModel = require('../models/userModel')
+
 //verifying the token for any route we choose to protect
 const requireAuth = (req,res,next)=>{
     const token = req.cookies.jwt//get the token from cookie (if user is already signed)
@@ -15,14 +16,14 @@ const requireAuth = (req,res,next)=>{
             }
         })
     }else{ //the user isn't logged in
-        res.redirect('/login')
+        res.redirect('/loginError')
+        res.status(400).end()
     }
 
 }
 
 //check current user
-
-const checkUser =  (req,res,next) => {
+const currentUser =  (req,res,next) => {
     const token = req.cookies.jwt//get the token from cookie (if user is already signed)
     //check jwt exists and is verified
     if(token) {
@@ -39,11 +40,10 @@ const checkUser =  (req,res,next) => {
                 next()
             }
         })
-
     }else{
         res.locals.user = null
         next()
     }
 }
 
-module.exports = {requireAuth, checkUser}
+module.exports = {requireAuth, currentUser}

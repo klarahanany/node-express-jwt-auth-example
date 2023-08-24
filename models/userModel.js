@@ -29,7 +29,7 @@ UserSchema.pre('save', async function (next){
         console.log("null")
       throw new Error('null')
     }
-    this.password = await bcrypt.hash(this.password,10)  //this.password refers to the instance of current user pass
+    this.password = await bcrypt.hash(this.password,11)  //this.password refers to the instance of current user pass
 
     next()
 })
