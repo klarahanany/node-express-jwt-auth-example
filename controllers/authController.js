@@ -5,8 +5,16 @@ const bcrypt  = require('bcrypt')
 const jwt = require('jsonwebtoken')
 // handle errors
 const handleErrors = (err) => {
-    console.log(err.message, err.code);
-    let errors = { email: '', password: '' };
+
+
+    console.log(err)
+
+    let errors = { username : '' ,email: '', password: '' };
+
+    //incorrect email
+    if(err === 'incorrect username' ){
+        errors.username = 'that username is not registered'
+    }
 
     //incorrect email
     if(err.message === 'incorrect email'){
@@ -19,7 +27,7 @@ const handleErrors = (err) => {
     }
 
     // validation errors
-    if (err.message.includes('user validation failed')) {
+    else if (err === 'user validation failed') {
         // console.log(err);
         Object.values(err.errors).forEach(({ properties }) => {
             // console.log(val);
@@ -70,6 +78,10 @@ const login_post = async (req,res) =>{
 
             }
 
+        } else{ //if user exists in db
+            const error = handleErrors('incorrect username')
+            console.log(error)
+            res.status(400).json({error})
         }
     }catch (e) {
         const error = handleErrors(e)
