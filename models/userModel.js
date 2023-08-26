@@ -19,6 +19,23 @@ const UserSchema = new mongoose.Schema({
         type : String,
         require : [true, 'Please enter a password']
     },
+    firstName : {
+        type: String,
+        required: [true, 'Please enter a first name.'],
+
+    },
+    lastName : {
+        type: String,
+        required: [true, 'Please enter a last name.'],
+
+    },
+    role : {
+        type: String,
+
+    },
+    userLogs : [{
+      type: mongoose.Schema.Types.ObjectId, ref: "logs"
+    }]
 })
 
 // call the function before doc saved to database (instance already created tho)

@@ -1,5 +1,5 @@
 
-
+const Roles = require('../models/Roles')
 const userModel = require('../models/userModel.js')
 const bcrypt  = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -44,17 +44,27 @@ const signup_get = (req,res) =>{
 const login_get = (req,res) =>{ //to display the UI
     res.render('login')
 }
+const createCookie = (token, res)=>{
+    const cookieOptions = {
+        expires: new Date( Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly : true
+    }
+      if(process.env.NODE_ENV === 'production') cookieOptions.secure =true;
+    res.cookie('jwt', token, cookieOptions);
+}
 
 const signup_post = async (req,res) =>{
-    const username  = req.body.username
-    const email = req.body.email
-    const password = req.body.password
+
+    const   {username, password, email, firstName,LastName } = req.body
+    const role = Roles.viewer
+    const userLogs =  ['']
    try{
 
-       const user = await userModel.create({username,email,password});
+       const user = await userModel.create({firstName, LastName, username,email,password, role, userLogs});
         const token = createToken(user._id)
        //sending the token as a cookie to frontend
-       res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
+       createCookie(token,res)
+
        res.status(201).json({user: user._id}) // send back to frontend as json body
        console.log(`${username} created`)
    }catch (e) {
@@ -73,7 +83,7 @@ const login_post = async (req,res) =>{
             if(auth){ //if password is correct after comparing
                 const token = createToken(user._id)
                 //sending the token as a cookie to frontend
-                res.cookie('jwt',token, {httpOnly: true, maxAge: maxAge*1000})
+                createCookie(token,res)
                 res.status(201).json({user: user._id}) // send back to frontend as json body
 
             }
