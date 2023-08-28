@@ -1,5 +1,6 @@
 <%- include('partials/header'); -%>
-<form action="/login" >
+
+<form action="/login" method="POST">
     <h2>Login</h2>
 
     <label for="username">Username</label>
@@ -41,6 +42,8 @@
             passwordError.textContent = response.errors.password
             usernameError.textContent = response.errors.username
         }
+        // After successful login
+
         if(response.user){
             console.log(response.user.firstName)
             location.assign('/')

@@ -1,29 +1,55 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require("cors");
 const authRoutes = require('./routes/authRoutes')
 const cookieParser = require ('cookie-parser')
 const bodyParser = require('body-parser');
-const {currentUser,onlyForUsers,usersOnly} = require("./middleware/authMiddware");
+const {currentUser,onlyForUsers,usersOnly, isLoggedIn} = require("./middleware/authMiddware");
+const globalErrorHandler = require('./controllers/errorController');
 const app = express();
-
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 // middleware
 app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.json())
-app.use(cookieParser())
 
+
+// Body parser, reading data from body into req.body
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+app.use(cors());
+// Data sanitization against XSS
+app.use(xss());
+
+// Prevent parameter pollution
+app.use(
+    hpp({
+        whitelist: [
+            'duration',
+            'ratingsQuantity',
+            'ratingsAverage',
+            'maxGroupSize',
+            'difficulty',
+            'price'
+        ]
+    })
+);
 // view engine
 app.set('view engine', 'ejs');
 
-// database connection
-const dbURI = 'mongodb://127.0.0.1:27017/node-auth';
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then((result) => app.listen(3001))
-  .catch((err) => console.log(err));
-
+app.use(globalErrorHandler);
 // routes
+
 app.get('*', currentUser)//apply to every route (protect routes)
 app.get('/', (req, res) => res.render('home'));
 
-app.get('/smoothies', usersOnly,(req, res) => res.render('smoothies'));
-app.use(authRoutes)
+app.use("/",authRoutes)
+app.use(isLoggedIn)
+
+app.get('/smoothies',(req, res) => res.render('smoothies'));
+
+module.exports = app;

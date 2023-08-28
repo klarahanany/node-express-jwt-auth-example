@@ -1,6 +1,6 @@
 <%- include('partials/header'); -%>
 
-<form action="/signup" >
+<form action="/signup" method="POST">
     <h2>Sign up</h2>
     <label for="Firstname">First name</label>
     <input type="text" name="firstName" required />
@@ -15,8 +15,8 @@
     <label for="password">Password</label>
     <input type="password" name="password" required />
     <div class="password error"></div>
-    <label for="confirmPassword">Confirm Password</label>
-    <input type="password" name="confirmPassword" required />
+    <label for="passwordConfirm">Confirm Password</label>
+    <input type="password" name="passwordConfirm" required />
 
     <button>Sign up</button>
 </form>
@@ -40,11 +40,11 @@
         const password = form.password.value;
         const firstName  = form.firstName.value;
         const lastName =form.lastName.value;
-        const confirmPassword = form.confirmPassword.value;
+        const passwordConfirm = form.passwordConfirm.value;
         //api call from frontend to server, sending data from form to server to save in db
         const res = await fetch('/signup',{
             method : 'POST',
-            body: JSON.stringify({username, email,password, firstName ,lastName, confirmPassword}),
+            body: JSON.stringify({username, email,password, firstName ,lastName, passwordConfirm}),
             headers: {'Content-type':'application/json',}
         })
 

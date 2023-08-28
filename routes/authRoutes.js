@@ -1,5 +1,5 @@
-const Router = require('express')
-const router = Router()
+const express = require('express')
+const router = express.Router()
 const authController = require('../controllers/authController')
 const {render} = require("ejs");
 router.get('/signup', authController.signup_get)

@@ -49,7 +49,9 @@ const login_get = (req,res) =>{ //to display the UI
 const createCookie = (token, res)=>{
     const cookieOptions = {
         expires: new Date( Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
-        httpOnly : true
+        httpOnly : true,
+        secure :false,
+
     }
       if(process.env.NODE_ENV === 'production') cookieOptions.secure =true;
     res.cookie('jwt', token, cookieOptions);
@@ -57,16 +59,19 @@ const createCookie = (token, res)=>{
 
 const signup_post = async (req,res) =>{
 
-    const   {username, password, email, firstName,lastName, passwordConfirm:confirmPassword } = req.body
+    const   {username, password, email, firstName,lastName, passwordConfirm } = req.body
     const role = Roles.viewer
     const userLogs = []; // Initialize userLogs as an empty array
 
     try{
 
-       const user = await userModel.create({firstName, lastName, username,email,password, role, userLogs,passwordConfirm : confirmPassword});
+       const user = await userModel.create({firstName, lastName,
+           username,email,password, role,
+           userLogs,passwordConfirm});
         const token = createToken(user._id)
        //sending the token as a cookie to frontend
        createCookie(token,res)
+
 
        res.status(201).json({user: user._id, token : token}) // send back to frontend as json body
        console.log(`${username} created`)
@@ -105,7 +110,7 @@ const login_post = catchAsync( async (req,res,next) =>{
         //if user exists in database
 
         const auth =  await bcrypt.compare(password, user.password)
-        console.log(auth)
+
         if(!user || !auth) return next(new AppError ('Incorrect email or password!',401))
          else{ //if user exists in db
             //if password is correct after comparing
@@ -115,9 +120,10 @@ const login_post = catchAsync( async (req,res,next) =>{
             res.status(201).json({
                 user: {
                     username: user.username,
-                    firstName: user.firstName
+                    firstName: user.firstName,
+                    lastName: user.lastName
                 },
-              //  token :token,
+
                 status: 'success',
             }) // send back to frontend as json body
         }
