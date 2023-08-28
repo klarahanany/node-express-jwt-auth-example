@@ -2,7 +2,10 @@
 
 <form action="/signup" >
     <h2>Sign up</h2>
-
+    <label for="Firstname">First name</label>
+    <input type="text" name="firstName" required />
+    <label for="Lastname">Last name</label>
+    <input type="text" name="lastName" required />
     <label for="username">Username</label>
     <input type="text" name="username" required />
     <div class="username error"></div>
@@ -12,6 +15,9 @@
     <label for="password">Password</label>
     <input type="password" name="password" required />
     <div class="password error"></div>
+    <label for="confirmPassword">Confirm Password</label>
+    <input type="password" name="confirmPassword" required />
+
     <button>Sign up</button>
 </form>
 
@@ -32,11 +38,14 @@
         const username = form.username.value;
         const email = form.email.value;
         const password = form.password.value;
+        const firstName  = form.firstName.value;
+        const lastName =form.lastName.value;
+        const confirmPassword = form.confirmPassword.value;
         //api call from frontend to server, sending data from form to server to save in db
         const res = await fetch('/signup',{
             method : 'POST',
-            body: JSON.stringify({username, email,password}),
-            headers: {'Content-type':'application/json'}
+            body: JSON.stringify({username, email,password, firstName ,lastName, confirmPassword}),
+            headers: {'Content-type':'application/json',}
         })
 
         //after getting response from the server

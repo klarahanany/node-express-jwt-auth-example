@@ -1,8 +1,10 @@
-
+require('dotenv').config();
 const Roles = require('../models/Roles')
 const userModel = require('../models/userModel.js')
 const bcrypt  = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const AppError = require("../utils/appError");
+const catchAsync = require('../utils/catchAsync')
 // handle errors
 const handleErrors = (err) => {
 
@@ -55,17 +57,18 @@ const createCookie = (token, res)=>{
 
 const signup_post = async (req,res) =>{
 
-    const   {username, password, email, firstName,LastName } = req.body
+    const   {username, password, email, firstName,lastName, confirmPassword } = req.body
     const role = Roles.viewer
-    const userLogs =  ['']
-   try{
+    const userLogs = []; // Initialize userLogs as an empty array
 
-       const user = await userModel.create({firstName, LastName, username,email,password, role, userLogs});
+    try{
+
+       const user = await userModel.create({firstName, lastName, username,email,password, role, userLogs,passwordConfirm : confirmPassword});
         const token = createToken(user._id)
        //sending the token as a cookie to frontend
        createCookie(token,res)
 
-       res.status(201).json({user: user._id}) // send back to frontend as json body
+       res.status(201).json({user: user._id, token : token}) // send back to frontend as json body
        console.log(`${username} created`)
    }catch (e) {
       const error = handleErrors(e)
@@ -73,39 +76,56 @@ const signup_post = async (req,res) =>{
    }
 }
 
-const login_post = async (req,res) =>{
+const login_post = catchAsync( async (req,res,next) =>{
     const username  = req.body.username
     const password = req.body.password
+    const email = req.body.email
+    let viaEmail= false, viaUsername =false
+    if(email) viaEmail=true
+    else viaUsername=true
+
     try{
-        const user = await userModel.findOne({username})
-        if(user){
-            const auth =  await bcrypt.compare(password, user.password)
-            if(auth){ //if password is correct after comparing
-                const token = createToken(user._id)
-                //sending the token as a cookie to frontend
-                createCookie(token,res)
-                res.status(201).json({user: user._id}) // send back to frontend as json body
+    let user
+        //check if email or password or username exist in input
+        if(email && !password) return next(new AppError ('Please provide email and password!',400))
+        else if (username && !password )return next(new AppError ('Please provide email and password!',400))
 
-            }
-
-        } else{ //if user exists in db
-            const error = handleErrors('incorrect username')
-            console.log(error)
-            res.status(400).json({error})
+        //check if the input was email or username
+        if(username)
+         user = await userModel.findOne({username}).select('+password')
+        else if (email)  user = await userModel.findOne({email}).select('+password')
+        //if user exists in database
+        const auth =  await bcrypt.compare(password, user.password)
+        if(!user || !auth) return next(new AppError ('Incorrect email or password!',401))
+         else{ //if user exists in db
+            //if password is correct after comparing
+            const token = createToken(user._id, user.role)
+            //sending the token as a cookie to frontend
+            createCookie(token,res)
+            res.status(201).json({
+                user: {
+                    username: user.username,
+                    firstName: user.firstName
+                },
+              //  token :token,
+                status: 'success',
+            }) // send back to frontend as json body
         }
     }catch (e) {
         const error = handleErrors(e)
         res.status(400).json({error})
     }
 
-}
+})
 
 const maxAge = 3 * 24 * 60 * 60;
 //takes user id from database
-const createToken = (id)=>{
-        //save user id in the token
-    return jwt.sign({id}, 'mysecretcode', {
-        expiresIn: maxAge // 3 days
+const createToken = (id, role)=>{
+        //All data we want to save into the token ; save user id in the token
+    return jwt.sign(
+        {id, role},
+        process.env.SECRET_CODE, {
+        expiresIn: process.env.JWT_COOKIE_EXPIRES_IN // 3 days
     })
 }
 
@@ -115,4 +135,9 @@ const logout_get = async(req,res)=> {
     res.redirect('/')
 
 }
+
+
+exports.protect = catchAsync((req,res,next) => {
+
+})
 module.exports = {signup_get,signup_post,login_post,login_get,logout_get}

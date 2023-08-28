@@ -35,15 +35,16 @@
         })
 
         //after getting response from the server
-        const data = await res.json()
-        if(data.errors){
+        const response = await res.json()
+        if(response.errors){
 
-            passwordError.textContent = data.errors.password
-            usernameError.textContent = data.errors.username
+            passwordError.textContent = response.errors.password
+            usernameError.textContent = response.errors.username
         }
-        if(data.user){
+        if(response.user){
+            console.log(response.user.firstName)
             location.assign('/')
         }
-        console.log(data)
+        console.log(response)
     });
 </script>
