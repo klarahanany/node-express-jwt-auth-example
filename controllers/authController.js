@@ -57,7 +57,7 @@ const createCookie = (token, res)=>{
 
 const signup_post = async (req,res) =>{
 
-    const   {username, password, email, firstName,lastName, confirmPassword } = req.body
+    const   {username, password, email, firstName,lastName, passwordConfirm:confirmPassword } = req.body
     const role = Roles.viewer
     const userLogs = []; // Initialize userLogs as an empty array
 
@@ -79,6 +79,7 @@ const signup_post = async (req,res) =>{
 const login_post = catchAsync( async (req,res,next) =>{
     const username  = req.body.username
     const password = req.body.password
+
     const email = req.body.email
     let viaEmail= false, viaUsername =false
     if(email) viaEmail=true
@@ -93,9 +94,18 @@ const login_post = catchAsync( async (req,res,next) =>{
         //check if the input was email or username
         if(username)
          user = await userModel.findOne({username}).select('+password')
-        else if (email)  user = await userModel.findOne({email}).select('+password')
+        else if (email != null)  user = await userModel.findOne({email}).select('+password')
+        if (!user) {
+            return res.status(401).json({
+                status: 'fail',
+                message: 'Invalid credentials',
+            });
+            next()
+        }
         //if user exists in database
+
         const auth =  await bcrypt.compare(password, user.password)
+        console.log(auth)
         if(!user || !auth) return next(new AppError ('Incorrect email or password!',401))
          else{ //if user exists in db
             //if password is correct after comparing

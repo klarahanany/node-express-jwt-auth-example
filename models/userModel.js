@@ -51,7 +51,7 @@ const UserSchema = new mongoose.Schema({
    /**  userLogs : [{
       type: mongoose.Schema.Types.ObjectId, ref: "logs"
     }],**/
-   passwordChangedAt: Date,
+    passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
     active: {
@@ -63,16 +63,16 @@ const UserSchema = new mongoose.Schema({
 
 // call the function before doc saved to database (instance already created tho)
 
-UserSchema.pre('save', async function (next){
-
-    if(this.password == null) {
-        console.log("null")
-      throw new Error('null')
-    }
-    this.password = await bcrypt.hash(this.password,11)  //this.password refers to the instance of current user pass
-
-    next()
-})
+// UserSchema.pre('save', async function (next){
+//
+//     if(this.password == null) {
+//         console.log("null")
+//       throw new Error('null')
+//     }
+//     this.password = await bcrypt.hash(this.password,11)  //this.password refers to the instance of current user pass
+//
+//     next()
+// })
 
 
 UserSchema.pre('save', async function(next) {
