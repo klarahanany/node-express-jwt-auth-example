@@ -10,6 +10,8 @@
     <input type="password" name="password" required />
     <div class="password error"></div>
     <button>Login</button>
+    <div class="error-message" style="color: red;"></div>
+    
 </form>
 
 <%- include('partials/footer'); -%>
@@ -37,10 +39,11 @@
 
         //after getting response from the server
         const response = await res.json()
-        if(response.errors){
-
-            passwordError.textContent = response.errors.password
-            usernameError.textContent = response.errors.username
+        //check if username or password is correct if one of them not correct to show error massage
+        if (response.errors) {
+            const errorMessage = response.errors.status || "Incorrect username or password.";
+            const errorElement = document.querySelector('.error-message');
+            errorElement.textContent = errorMessage;
         }
         // After successful login
 

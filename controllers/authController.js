@@ -57,29 +57,53 @@ const createCookie = (token, res)=>{
     res.cookie('jwt', token, cookieOptions);
 }
 
-const signup_post = async (req,res) =>{
-
-    const   {username, password, email, firstName,lastName, passwordConfirm } = req.body
-    const role = Roles.viewer
+const signup_post = async (req, res) => {
+    const { username, password, email, firstName, lastName, passwordConfirm } = req.body;
+    const role = Roles.viewer;
     const userLogs = []; // Initialize userLogs as an empty array
 
-    try{
+    try {
+        const existingEmailUser = await userModel.findOne({ email: email });
+        if (existingEmailUser) {
+            return res.status(400).json({
+                errors: {
+                    email: 'Email already exists',
+                },
+            });
+        }
 
-       const user = await userModel.create({firstName, lastName,
-           username,email,password, role,
-           userLogs,passwordConfirm});
-        const token = createToken(user._id)
-       //sending the token as a cookie to frontend
-       createCookie(token,res)
+        const existingUsernameUser = await userModel.findOne({ username: username });
+        if (existingUsernameUser) {
+            return res.status(400).json({
+                errors: {
+                    username: 'Username already exists',
+                },
+            });
+        }
 
+        const user = await userModel.create({
+            firstName,
+            lastName,
+            username,
+            email,
+            password,
+            role,
+            userLogs,
+            passwordConfirm,
+        });
 
-       res.status(201).json({user: user._id, token : token}) // send back to frontend as json body
-       console.log(`${username} created`)
-   }catch (e) {
-      const error = handleErrors(e)
-       res.status(400).json({ error });
-   }
-}
+        const token = createToken(user._id);
+        //sending the token as a cookie to frontend
+        createCookie(token, res);
+
+        res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
+        console.log(`${username} created`);
+    } catch (e) {
+        const error = handleErrors(e);
+        res.status(400).json({ error });
+    }
+};
+
 
 const login_post = catchAsync( async (req,res,next) =>{
     const username  = req.body.username
@@ -102,8 +126,9 @@ const login_post = catchAsync( async (req,res,next) =>{
         else if (email != null)  user = await userModel.findOne({email}).select('+password')
         if (!user) {
             return res.status(401).json({
-                status: 'fail',
-                message: 'Invalid credentials',
+                errors: {
+                    status: 'Invalid credentials',
+                },
             });
             next()
         }
@@ -111,8 +136,13 @@ const login_post = catchAsync( async (req,res,next) =>{
 
         const auth =  await bcrypt.compare(password, user.password)
 
-        if(!user || !auth) return next(new AppError ('Incorrect email or password!',401))
-         else{ //if user exists in db
+        if (!user || !auth) {
+            return res.status(401).json({
+                errors: {
+                    status: 'Incorrect email or password',
+                },
+            });
+        }else{ //if user exists in db
             //if password is correct after comparing
             const token = createToken(user._id, user.role)
             //sending the token as a cookie to frontend
