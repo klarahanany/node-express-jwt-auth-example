@@ -104,6 +104,7 @@ const signup_post = async (req, res) => {
 
         const token = createToken(user._id);
         //sending the token as a cookie to frontend
+        //aaa
         createCookie(token, res);
 
         res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
