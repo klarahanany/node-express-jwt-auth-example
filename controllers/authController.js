@@ -64,6 +64,16 @@ const signup_post = async (req, res) => {
 
     try {
         const existingEmailUser = await userModel.findOne({ email: email });
+        const existingUsernameUser = await userModel.findOne({ username: username });
+        if (existingEmailUser && existingUsernameUser) {
+            return res.status(400).json({
+                errors: {
+                    email: 'Email already exists',
+                    username: 'Username already exists'
+                },
+            });
+        }
+
         if (existingEmailUser) {
             return res.status(400).json({
                 errors: {
@@ -72,7 +82,7 @@ const signup_post = async (req, res) => {
             });
         }
 
-        const existingUsernameUser = await userModel.findOne({ username: username });
+
         if (existingUsernameUser) {
             return res.status(400).json({
                 errors: {
