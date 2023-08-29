@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require("cors");
 const authRoutes = require('./routes/authRoutes')
+const userRoutes = require('./routes/userRoutes')
 const cookieParser = require ('cookie-parser')
 const bodyParser = require('body-parser');
 const {currentUser,onlyForUsers,usersOnly, isLoggedIn} = require("./middleware/authMiddware");
@@ -21,6 +22,8 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
+
+//It prevents any random website from using your authenticated cookies to send an API request to your bank's website and do stuff like secretly withdraw money.
 app.use(cors());
 // Data sanitization against XSS
 app.use(xss());
@@ -48,8 +51,8 @@ app.get('*', currentUser)//apply to every route (protect routes)
 app.get('/', (req, res) => res.render('home'));
 
 app.use("/",authRoutes)
-app.use(isLoggedIn)
 
+app.use("/dashboard",userRoutes)
 app.get('/smoothies',(req, res) => res.render('smoothies'));
 
 module.exports = app;

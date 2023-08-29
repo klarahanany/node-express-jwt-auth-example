@@ -46,7 +46,7 @@ const UserSchema = new mongoose.Schema({
     role : {
         type: String,
         enum: [Roles],
-        default: Roles.viewer
+        default: Roles.admin
 
     },
    /**  userLogs : [{

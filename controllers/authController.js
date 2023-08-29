@@ -59,8 +59,8 @@ const createCookie = (token, res)=>{
 
 const signup_post = async (req, res) => {
     const { username, password, email, firstName, lastName, passwordConfirm } = req.body;
-    const role = Roles.viewer;
-    const userLogs = []; // Initialize userLogs as an empty array
+    //const role = Roles.viewer;
+
 
     try {
         const existingEmailUser = await userModel.findOne({ email: email });
@@ -97,8 +97,6 @@ const signup_post = async (req, res) => {
             username,
             email,
             password,
-            role,
-            userLogs,
             passwordConfirm,
         });
 
@@ -121,8 +119,6 @@ const login_post = catchAsync( async (req,res,next) =>{
 
     const email = req.body.email
     let viaEmail= false, viaUsername =false
-    if(email) viaEmail=true
-    else viaUsername=true
 
     try{
     let user
@@ -191,9 +187,18 @@ const logout_get = async(req,res)=> {
     res.redirect('/')
 
 }
+exports.restrictTo = (...roles) => {
+    return (req, res, next) => {
+        // roles ['admin', 'lead-guide']. role='user'
+        if (!roles.includes(req.user.role)) {
+            return next(
+                new AppError('You do not have permission to perform this action', 403)
+            );
+        }
+
+        next();
+    };
+};
 
 
-exports.protect = catchAsync((req,res,next) => {
-
-})
 module.exports = {signup_get,signup_post,login_post,login_get,logout_get}

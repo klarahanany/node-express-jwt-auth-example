@@ -47,7 +47,7 @@ const isLoggedIn = catchAsync(  async (req, res, next) => {
 
 
 
-const usersOnly = catchAsync(  async (req, res, next) => {
+const verifyUser = catchAsync(  async (req, res, next) => {
     //1 getting token and check if it's there
     let token
     if (
@@ -139,4 +139,30 @@ const currentUser =  (req,res,next) => {
     }
 }
 
-module.exports = {onlyForUsers, currentUser, usersOnly,isLoggedIn}
+
+// Middleware to check user role
+function isAdmin(req, res, next) {
+
+        const token = req.header('Authorization');
+
+        if (!token) {
+            return res.status(401).json({ message: 'Authorization token missing' });
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.SECRET_CODE);
+            const userRole = decoded.role;
+
+            if (userRole === 'admin') {
+                // User is an admin, allow access
+                next();
+            } else {
+                // User is not an admin, deny access
+                res.status(403).json({ message: 'Access denied: Admin role required' });
+            }
+        } catch (error) {
+            res.status(401).json({ message: 'Invalid token' });
+        }
+    }
+
+module.exports = {onlyForUsers, currentUser, verifyUser,isLoggedIn,isAdmin}
