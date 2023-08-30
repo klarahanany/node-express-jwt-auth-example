@@ -63,6 +63,7 @@ const signup_post = async (req, res) => {
 
 
     try {
+        //check if the username and mail is already exist
         const existingEmailUser = await userModel.findOne({ email: email });
         const existingUsernameUser = await userModel.findOne({ username: username });
         if (existingEmailUser && existingUsernameUser) {
