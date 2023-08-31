@@ -152,7 +152,7 @@ const login_post = catchAsync( async (req,res,next) =>{
             //if password is correct after comparing
             const token = createToken(user._id, user.role)
             //sending the token as a cookie to frontend
-            createCookie(token,res)
+             (token,res)
             res.status(201).json({
                 user: {
                     username: user.username,

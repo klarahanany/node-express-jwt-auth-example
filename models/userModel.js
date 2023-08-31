@@ -59,21 +59,10 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         select: false
-    }
+    },
+    firstLogin: Boolean
 })
 
-// call the function before doc saved to database (instance already created tho)
-
-// UserSchema.pre('save', async function (next){
-//
-//     if(this.password == null) {
-//         console.log("null")
-//       throw new Error('null')
-//     }
-//     this.password = await bcrypt.hash(this.password,11)  //this.password refers to the instance of current user pass
-//
-//     next()
-// })
 
 
 UserSchema.pre('save', async function(next) {

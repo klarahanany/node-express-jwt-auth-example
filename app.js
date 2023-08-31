@@ -14,20 +14,24 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 // middleware
 app.use(express.static('public'));
-
-
 // Body parser, reading data from body into req.body
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '500kb' }));
+app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 app.use(cookieParser());
+
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
 //It prevents any random website from using your authenticated cookies to send an API request to your bank's website and do stuff like secretly withdraw money.
 app.use(cors());
+app.all('*', function (req, res) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+    res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+    //...
+});
 // Data sanitization against XSS
 app.use(xss());
-
 // Prevent parameter pollution
 app.use(
     hpp({
