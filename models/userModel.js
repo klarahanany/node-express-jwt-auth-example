@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const {isEmail} = require('validator')
 const bcrypt  = require('bcrypt')
 const Roles = require("./Roles");
-const UserSchema = new mongoose.Schema({
+const UserSchema =  mongoose.Schema({
     username : {
         type: String,
         required: [true, 'Please enter a username'],
@@ -60,7 +60,10 @@ const UserSchema = new mongoose.Schema({
         default: true,
         select: false
     },
-    firstLogin: Boolean
+    companyName: {
+        type: String
+    },
+
 })
 
 
@@ -128,6 +131,6 @@ UserSchema.methods.createPasswordResetToken = function() {
 
 
 
-const UserModel= mongoose.model('user', UserSchema)
+//const UserModel= mongoose.model('user', UserSchema)
 
-module.exports = UserModel
+module.exports = UserSchema

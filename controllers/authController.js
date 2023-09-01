@@ -1,10 +1,13 @@
 require('dotenv').config();
 const Roles = require('../models/Roles')
-const userModel = require('../models/userModel.js')
+const userSchema = require('../models/userModel.js')
 const bcrypt  = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const AppError = require("../utils/appError");
 const catchAsync = require('../utils/catchAsync')
+const mongoose = require("mongoose");
+const mongoose2 =require('../server')
+const {onSignupNewDatabase,switchDB,getDBModel} = require('../multiDatabaseHandler')
 // handle errors
 const handleErrors = (err) => {
 
@@ -58,14 +61,18 @@ const createCookie = (token, res)=>{
 }
 
 const signup_post = async (req, res) => {
-    const { username, password, email, firstName, lastName, passwordConfirm } = req.body;
+    const { username, password, email, firstName, lastName, passwordConfirm,companyName } = req.body;
     //const role = Roles.viewer;
 
-
+//1) swtichDB to AppTenant
+    const mainDB = await switchDB('MainDB', userSchema)
+    //2) create new admin user in AppTenant
+   const adminModel= await getDBModel(mainDB,'admins')
     try {
-        //check if the username and mail is already exist
-        const existingEmailUser = await userModel.findOne({ email: email });
-        const existingUsernameUser = await userModel.findOne({ username: username });
+       //check if the username and mail is already exist
+        const existingEmailUser = await adminModel.findOne({ email: email });
+        const existingUsernameUser = await adminModel.findOne({ username: username });
+        const existingCompanyName = await adminModel.findOne({ companyName });
         if (existingEmailUser && existingUsernameUser) {
             return res.status(400).json({
                 errors: {
@@ -91,21 +98,39 @@ const signup_post = async (req, res) => {
                 },
             });
         }
-
-        const user = await userModel.create({
+        if (existingCompanyName) {
+            return res.status(400).json({
+                errors: {
+                    username: 'This company already exists',
+                },
+            });
+        }
+        // const user = await userModel.create({
+        //     firstName,
+        //     lastName,
+        //     username,
+        //     email,
+        //     password,
+        //     passwordConfirm,
+        // });
+        const flagNewDB = await onSignupNewDatabase(adminModel,{
             firstName,
             lastName,
             username,
-            email,
             password,
             passwordConfirm,
-        });
+            email,
+            companyName,
+        })
+        if(!flagNewDB)  res.status(400).json({  message: `failed to make new database for ${companyName}` });
 
-        const token = createToken(user._id);
+        const token = createToken(123, 'admin');
+      //  const token = createToken(123);
         //sending the token as a cookie to frontend
         createCookie(token, res);
 
-        res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
+     //   res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
+        res.status(201).json({ id: 123, token: token })
         console.log(`${username} created`);
     } catch (e) {
         const error = handleErrors(e);
