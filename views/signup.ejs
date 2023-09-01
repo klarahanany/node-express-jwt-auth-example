@@ -17,6 +17,9 @@
     <div class="password error"></div>
     <label for="passwordConfirm">Confirm Password</label>
     <input type="password" name="passwordConfirm" required />
+    <div class="password error">
+        <div class="password-strength-error" style="color: red"></div>
+       
 
     <button>Sign up</button>
     <div class="error-message" style="color: red;"></div>
@@ -25,46 +28,103 @@
 <%- include('partials/footer'); -%>
 
 <script>
-    const form = document.querySelector('form');
-    const emailError = document.querySelector('.email.error');
-    const passwordError = document.querySelector('.password.error');
-    const usernameError = document.querySelector('.username.error');
-    const errorMessage = document.querySelector('.error-message'); // General error message container
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        // Reset errors
-        emailError.textContent = '';
-        passwordError.textContent = '';
-        usernameError.textContent = '';
-        errorMessage.textContent = ''; // Clear general error message
-
-        // Get values
-        const username = form.username.value;
-        const email = form.email.value;
-        const password = form.password.value;
-        const firstName = form.firstName.value;
-        const lastName = form.lastName.value;
-        const passwordConfirm = form.passwordConfirm.value;
-
-        // API call to server
-        const res = await fetch('/signup', {
-            method: 'POST',
-            body: JSON.stringify({ username, email, password, firstName, lastName, passwordConfirm }),
-            headers: { 'Content-type': 'application/json' },
-        });
-
-        // After getting response from the server
-        const data = await res.json();
-        if (data.errors) {
-            emailError.textContent = data.errors.email;
-            passwordError.textContent = data.errors.password;
-            usernameError.textContent = data.errors.username;
-        }
-        if (data.user) {
-            location.assign('/');
-        } else if (data.error) {
-            errorMessage.textContent = data.error.message; // Display general error message
-        }
+    const form = document.querySelector("form");
+    const emailError = document.querySelector(".email.error");
+    const passwordError = document.querySelector(".password.error");
+    const passwordStrengthError = document.querySelector(".password-strength-error"); // Reference to the password strength error element
+    const usernameError = document.querySelector(".username.error");
+    const errorMessage = document.querySelector(".error-message");
+  
+    // Function to check password strength
+    const checkPasswordStrength = (password) => {
+      const minLength = 8;
+      const minUpperCase = 1;
+      const minLowerCase = 1;
+      const minNumbers = 1;
+      const minSpecialChars = 1;
+  
+      if (password.length < minLength) {
+        return 'Password must be at least 8 characters long.';
+      }
+  
+      if (password.replace(/[^A-Z]/g, '').length < minUpperCase) {
+        return 'Password must contain at least one uppercase letter.';
+      }
+  
+      if (password.replace(/[^a-z]/g, '').length < minLowerCase) {
+        return 'Password must contain at least one lowercase letter.';
+      }
+  
+      if (password.replace(/[^0-9]/g, '').length < minNumbers) {
+        return 'Password must contain at least one number.';
+      }
+  
+      if (password.replace(/[!@#$%^&()_+\-={}\[\]:;<>,?\\~]/g, '').length < minSpecialChars) {
+        return 'Password must contain at least one special character .';
+      }
+  
+      return null; // Password meets all criteria
+    };
+  
+    // Function to update password strength message
+    const updatePasswordStrengthMessage = () => {
+      const password = form.password.value;
+      const passwordStrengthErrorMessage = checkPasswordStrength(password);
+      passwordStrengthError.textContent = passwordStrengthErrorMessage || ""; // Display password strength error message or clear it if the password meets the criteria
+    };
+  
+    // Add an input event listener to the password field
+    form.password.addEventListener("input", updatePasswordStrengthMessage);
+  
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      emailError.textContent = "";
+      passwordError.textContent = "";
+      passwordStrengthError.textContent = ""; // Clear password strength error
+      usernameError.textContent = "";
+      errorMessage.textContent = "";
+  
+      const username = form.username.value;
+      const email = form.email.value;
+      const password = form.password.value;
+      const firstName = form.firstName.value;
+      const lastName = form.lastName.value;
+      const passwordConfirm = form.passwordConfirm.value;
+  
+      // Check password strength
+      const passwordStrengthErrorMessage = checkPasswordStrength(password);
+      if (passwordStrengthErrorMessage) {
+        passwordStrengthError.textContent = passwordStrengthErrorMessage; // Display password strength error message
+        return; // Exit the function if password strength criteria are not met
+      }
+  
+      // API call to server
+      const res = await fetch("/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          firstName,
+          lastName,
+          passwordConfirm,
+        }),
+        headers: { "Content-type": "application/json" },
+      });
+  
+      // After getting a response from the server
+      const data = await res.json();
+      if (data.errors) {
+        emailError.textContent = data.errors.email;
+        passwordError.textContent = data.errors.password;
+        usernameError.textContent = data.errors.username;
+      }
+      if (data.user) {
+        location.assign("/");
+      } else if (data.error) {
+        errorMessage.textContent = data.error.message;
+      }
     });
-</script>
+  
+  </script>
+  
