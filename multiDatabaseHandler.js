@@ -90,8 +90,7 @@ const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
         const admin = await EmployeeModel.findOne({username : 'm13'} )
 
         // Convert the JavaScript object to a JSON string using JSON.stringify
-        resolve ({status: true, id: admin._id, username: admin.username, firstName: admin.firstName
-        ,lastName: admin.lastName});
+        resolve ({status: true, id: admin._id});
     } catch (error) {
         console.error(error);
         reject(error);

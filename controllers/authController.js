@@ -128,10 +128,10 @@ const signup_post = async (req, res) => {
             phoneNumber,
         }).then((result) => {
 
-            const  { status, id,username, firstName,lastName} = result;
+            const  { status ,id} = result;
             if(!status)  return res.status(400).json({  message: `failed to make new database for ${companyName}` });
 
-            const token = createToken(id, 'admin',firstName,lastName,username);
+            const token = createToken(id, 'admin',firstName,lastName,username,companyName);
             //  const token = createToken(123);
             //sending the token as a cookie to frontend
             createCookie(token, res);
@@ -159,7 +159,13 @@ const login_post = catchAsync( async (req,res,next) =>{
     let viaEmail= false, viaUsername =false
 
     try{
-    let user
+
+        //1)  Determine the tenant company database
+
+        const companyDB = await switchDB('galil','employee', userSchema)
+        //2) point to users collections in companyDB
+        const userModel= await getDBModel(companyDB,'employee',userSchema)
+        let user
         //check if email or password or username exist in input
         if(email && !password) return next(new AppError ('Please provide email and password!',400))
         else if (username && !password )return next(new AppError ('Please provide email and password!',400))
@@ -188,9 +194,9 @@ const login_post = catchAsync( async (req,res,next) =>{
             });
         }else{ //if user exists in db
             //if password is correct after comparing
-            const token = createToken(user._id, user.role)
+            const token = createToken(user._id, user.role, user.firstName,user.lastName,user.username,user.companyName)
             //sending the token as a cookie to frontend
-             (token,res)
+             createCookie(token,res)
             res.status(201).json({
                 user: {
                     username: user.username,
@@ -210,10 +216,10 @@ const login_post = catchAsync( async (req,res,next) =>{
 
 const maxAge = 3 * 24 * 60 * 60;
 //takes user id from database
-const createToken = (id, role,firstName,lastName,username)=>{
+const createToken = (id, role,firstName,lastName,username,companyName)=>{
         //All data we want to save into the token ; save user id in the token
     return jwt.sign(
-        {id, role,firstName,lastName,username},
+        {id, role,firstName,lastName,username,companyName},
         process.env.SECRET_CODE, {
         expiresIn: process.env.JWT_COOKIE_EXPIRES_IN // 3 days
     })
