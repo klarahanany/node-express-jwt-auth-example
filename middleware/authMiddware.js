@@ -70,7 +70,8 @@ const verifyUser = catchAsync(  async (req, res, next) => {
     const decoded = await promisify(jwt.verify)(token, process.env.SECRET_CODE);
 
     // 3) Check if user still exists
-    const currentUser = await userModel.findById(decoded.id);
+     const currentUser = ({username, firstName, lastName} = decodedToken)
+   // const currentUser = await userModel.findById(decoded.id);
     if (!currentUser) {
         return next(
             new AppError(
@@ -129,7 +130,8 @@ const currentUser =  (req,res,next) => {
                 next()
             } else {//is valid user
                 console.log(decodedToken)
-                res.locals.user =await userModel.findById(decodedToken.id)
+                //res.locals.user =await userModel.findById(decodedToken.id)
+                res.locals.user = ({username, firstName, lastName} = decodedToken)
                 next()
             }
         })

@@ -1,6 +1,6 @@
 const mongoose = require ("mongoose")
 
-const LogSchema = new mongoose.Schema({
+const ruleSchema = new mongoose.Schema({
 
 
     name: {
@@ -10,4 +10,4 @@ const LogSchema = new mongoose.Schema({
 
 })
 
-module.exports = LogSchema
+module.exports = ruleSchema

@@ -11,6 +11,10 @@
     <input type="text" name="username" required />
     <div class="username error"></div>
 
+    <label for="phoneNumber">Phone number</label>
+    <input type="text" name="phoneNumber" required />
+    <div class="phoneNumber error"></div>
+
     <label for="companyName">Company</label>
     <input type="text" name="companyName" required />
     <div class="companyName error"></div>
@@ -39,6 +43,7 @@
     const passwordStrengthError = document.querySelector(".password-strength-error"); // Reference to the password strength error element
     const usernameError = document.querySelector('.username.error');
     const companyError = document.querySelector('.companyName.error');
+    const phoneError = document.querySelector('.phoneNumber.error');
     const errorMessage = document.querySelector('.error-message'); // General error message container
 
     // Function to check password strength
@@ -81,7 +86,7 @@
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         // Reset errors
-
+        phoneError.textContent = '';
         emailError.textContent = '';
         passwordError.textContent = '';
         passwordStrengthError.textContent = ""; // Clear password strength error
@@ -96,6 +101,7 @@
         const lastName = form.lastName.value;
         const passwordConfirm = form.passwordConfirm.value;
         const companyName = form.companyName.value
+        const phoneNumber = form.phoneNumber.value
 
 
         // Check password strength
@@ -107,7 +113,7 @@
         // API call to server
         const res = await fetch('/signup', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password, firstName, lastName, passwordConfirm,companyName }),
+            body: JSON.stringify({ username, email, password, firstName, lastName, passwordConfirm,companyName,phoneNumber }),
             headers: { 'Content-type': 'application/json' },
         });
 
@@ -118,6 +124,7 @@
             passwordError.textContent = data.errors.password;
             usernameError.textContent = data.errors.username;
             companyError.textContent = data.errors.companyName;
+            phoneError.textContent = data.errors.phoneNumber;
         }
         if (data.user) {
             location.assign('/');

@@ -2,6 +2,8 @@ const connectDB = require('./connectDB')
 const TenantSchema= require ('./models/tenantSchema.js')
 const EmployeeSchema= require ('./models/employeeSchema.js')
 const userSchema = require('./models/userModel')
+const logSchema = require('./models/logModel')
+const ruleSchema = require('./models/ruleModel')
 const catchAsync = require('./utils/catchAsync')
 // Indicates which Schemas are used by whom
 const CompanySchemas = new Map([['employee', userSchema]])
@@ -47,11 +49,11 @@ const switchDB = async (dbName,collectionName,  dbSchema) => {
 
 
 //getDBModel will allow us to get the registered model for our db.
-/**
- * @return model from mongoose
+/**@parameters database, collection name, schema for collection
+ * @return collection from mongoose, incase not existent, make new collection
  */
-const getDBModel = async (db, modelName) => {
-    return db.model(modelName, userSchema) // create/get new collection (modelName)  into company(db) with
+const getDBModel = async (database, modelName, schema) => {
+    return database.model(modelName, schema) // create/get new collection (modelName)  into company(db) with
 }
 
 const initTennants = async (tenantData) => {
@@ -71,7 +73,7 @@ const initTennants = async (tenantData) => {
  * @author Mustafa Shama
  */
 const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
-
+    return new Promise(async (resolve, reject) => {
     try{
         //1) swtichDB to AppTenant
         //  const tenantDB = await switchDB('MainDB', TenantSchemas);
@@ -81,14 +83,20 @@ const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
         //3) create new DB in company name
         const companyDB=  await switchDB(adminData.companyName,'admins', adminSchema)
         //4) save same admin into the new company database - employee collections
-        const EmployeeModel = await getDBModel(companyDB, 'employee');
-        EmployeeModel.create(adminData)
-        return true;
-    }catch (e) {
-        console.log(e)
-        return false;
-    }
+        const EmployeeModel = await getDBModel(companyDB, 'employee',userSchema);
+        const logsModel = await getDBModel(companyDB, 'logs',logSchema);
+        const rulesModel = await getDBModel(companyDB, 'rules',ruleSchema);
+        await EmployeeModel.create(adminData)
+        const admin = await EmployeeModel.findOne({username : 'm13'} )
 
+        // Convert the JavaScript object to a JSON string using JSON.stringify
+        resolve ({status: true, id: admin._id, username: admin.username, firstName: admin.firstName
+        ,lastName: admin.lastName});
+    } catch (error) {
+        console.error(error);
+        reject(error);
+    }
+})
 }
 
 

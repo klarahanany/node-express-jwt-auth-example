@@ -70,7 +70,7 @@ const signup_post = async (req, res) => {
 //1) swtichDB to AppTenant
     const mainDB = await switchDB('MainDB','admins', userSchema)
     //2) create new admin user in AppTenant
-   const adminModel= await getDBModel(mainDB,'admins')
+   const adminModel= await getDBModel(mainDB,'admins',userSchema)
     try {
        //check if the username and mail is already exist
         const existingEmailUser = await adminModel.findOne({ email: email });
@@ -116,7 +116,8 @@ const signup_post = async (req, res) => {
         //     password,
         //     passwordConfirm,
         // });
-        const flagNewDB = onSignupNewDatabase(adminModel, userSchema,{
+
+         onSignupNewDatabase(adminModel, userSchema, {
             firstName,
             lastName,
             username,
@@ -125,17 +126,24 @@ const signup_post = async (req, res) => {
             email,
             companyName,
             phoneNumber,
+        }).then((result) => {
+
+            const  { status, id,username, firstName,lastName} = result;
+            if(!status)  return res.status(400).json({  message: `failed to make new database for ${companyName}` });
+
+            const token = createToken(id, 'admin',firstName,lastName,username);
+            //  const token = createToken(123);
+            //sending the token as a cookie to frontend
+            createCookie(token, res);
+
+            //   res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
+            res.status(201).json({ id: id, token: token })
+            console.log(`${username} created`);
         })
-        if(!flagNewDB)  res.status(400).json({  message: `failed to make new database for ${companyName}` });
+            .catch((error) => {
+                console.error(error);
+            });
 
-        const token = createToken(123, 'admin');
-      //  const token = createToken(123);
-        //sending the token as a cookie to frontend
-        createCookie(token, res);
-
-     //   res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
-        res.status(201).json({ id: 123, token: token })
-        console.log(`${username} created`);
     } catch (e) {
         const error = handleErrors(e);
         res.status(400).json({ error });
@@ -202,10 +210,10 @@ const login_post = catchAsync( async (req,res,next) =>{
 
 const maxAge = 3 * 24 * 60 * 60;
 //takes user id from database
-const createToken = (id, role)=>{
+const createToken = (id, role,firstName,lastName,username)=>{
         //All data we want to save into the token ; save user id in the token
     return jwt.sign(
-        {id, role},
+        {id, role,firstName,lastName,username},
         process.env.SECRET_CODE, {
         expiresIn: process.env.JWT_COOKIE_EXPIRES_IN // 3 days
     })
