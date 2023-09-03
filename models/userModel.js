@@ -8,6 +8,11 @@ const UserSchema =  mongoose.Schema({
         required: [true, 'Please enter a username'],
         unique: true
     },
+    phoneNumber : {
+        type: String,
+        //required: [true, 'Please enter a username'],
+        unique: true
+    },
 
     email : {
         type: String,
@@ -20,7 +25,7 @@ const UserSchema =  mongoose.Schema({
         type : String,
         require : [true, 'Please enter a password'],
         select: false,
-        minlength: 8, // Minimum password length is 8 characters
+        minlength: 6, // Minimum password length is 8 characters
     },
     passwordConfirm : {
         type: String,

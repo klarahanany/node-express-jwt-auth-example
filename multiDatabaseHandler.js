@@ -8,19 +8,24 @@ const CompanySchemas = new Map([['employee', userSchema]])
 const TenantSchemas = new Map([['admins', userSchema]])
 
 
-/** Switch db on same connection pool
- * @return new connection
+/** @description switch db on same connection pool,
+ * @return new db connection
+ * @params dbName, collection name, collection schema
+ * @author Mustafa Shama
  */
-const switchDB = async (dbName, dbSchema) => {
+const switchDB = async (dbName,collectionName,  dbSchema) => {
     const mongoose = await connectDB()
+
     if (mongoose.connection.readyState === 1) {
         const conn =await mongoose.connection;
+        //make new company database else connect to existed db
         const db = await conn.useDb(dbName, { useCache:true, noListener: true })
-        let collections = db.collection('admins');
+        let collections = db.collection(collectionName);
         collections.count().then((count) => {
             console.log(count);
         });
 
+        //1st approach
         // Prevent from schema re-registration
         if (collections.length === 0) {
             //create new collection
@@ -28,7 +33,14 @@ const switchDB = async (dbName, dbSchema) => {
                 db.model(modelName, schema)
             })
         }
-        return db
+        //2nd approach
+        // if (!db.model(collectionName,dbSchema)) {
+        //     //create new collection
+        //     dbSchema.forEach((schema, modelName) => {
+        //         db.model(modelName, schema)
+        //     })
+        // }
+        return db //return the new company db
     }
     throw new Error('switchDB')
 }
@@ -52,7 +64,13 @@ const initTennants = async (tenantData) => {
     return EmployeeModel;
 }
 
-const onSignupNewDatabase = async (adminModel,adminData) =>{
+/** @description on signup, handle new db connection and make
+ * new db in company name + employee collections
+ * @return true if sucessed
+ * @params adminModel(UserSchema), AdminData upon signup
+ * @author Mustafa Shama
+ */
+const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
 
     try{
         //1) swtichDB to AppTenant
@@ -61,7 +79,7 @@ const onSignupNewDatabase = async (adminModel,adminData) =>{
         // const tenantModel = await getDBModel(tenantDB, 'admins');//point to tenant collection
         await adminModel.create(adminData);//creating admin in mainDB(AppTenants)
         //3) create new DB in company name
-        const companyDB=  await switchDB(adminData.companyName, CompanySchemas)
+        const companyDB=  await switchDB(adminData.companyName,'admins', adminSchema)
         //4) save same admin into the new company database - employee collections
         const EmployeeModel = await getDBModel(companyDB, 'employee');
         EmployeeModel.create(adminData)

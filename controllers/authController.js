@@ -9,6 +9,8 @@ const mongoose = require("mongoose");
 const mongoose2 =require('../server')
 const {onSignupNewDatabase,switchDB,getDBModel} = require('../multiDatabaseHandler')
 // handle errors
+
+
 const handleErrors = (err) => {
 
 
@@ -30,6 +32,7 @@ const handleErrors = (err) => {
         errors.email = 'that email is already registered';
         return errors;
     }
+
 
     // validation errors
     else if (err === 'user validation failed') {
@@ -61,11 +64,11 @@ const createCookie = (token, res)=>{
 }
 
 const signup_post = async (req, res) => {
-    const { username, password, email, firstName, lastName, passwordConfirm,companyName } = req.body;
+    const { username, password, email, firstName, lastName, passwordConfirm,companyName,phoneNumber } = req.body;
     //const role = Roles.viewer;
 
 //1) swtichDB to AppTenant
-    const mainDB = await switchDB('MainDB', userSchema)
+    const mainDB = await switchDB('MainDB','admins', userSchema)
     //2) create new admin user in AppTenant
    const adminModel= await getDBModel(mainDB,'admins')
     try {
@@ -113,7 +116,7 @@ const signup_post = async (req, res) => {
         //     password,
         //     passwordConfirm,
         // });
-        const flagNewDB = await onSignupNewDatabase(adminModel,{
+        const flagNewDB = onSignupNewDatabase(adminModel, userSchema,{
             firstName,
             lastName,
             username,
@@ -121,6 +124,7 @@ const signup_post = async (req, res) => {
             passwordConfirm,
             email,
             companyName,
+            phoneNumber,
         })
         if(!flagNewDB)  res.status(400).json({  message: `failed to make new database for ${companyName}` });
 

@@ -9,6 +9,7 @@ const mongoOptions = {
     autoIndex: true,
     connectTimeoutMS: 10000,
     socketTimeoutMS: 30000,
+
 }
 
 function  connectDB() {
