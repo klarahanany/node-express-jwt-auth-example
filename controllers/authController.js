@@ -151,18 +151,20 @@ const signup_post = async (req, res) => {
 };
 
 
-const login_post = catchAsync( async (req,res,next) =>{
+const login_post = async (req,res,next) =>{
     const username  = req.body.username
     const password = req.body.password
-
+    const { companyName } = req.params;
+    console.log(companyName)
     const email = req.body.email
     let viaEmail= false, viaUsername =false
+    // Look up the company in your database to ensure it exists
 
     try{
-
+        req.companyName = companyName;
         //1)  Determine the tenant company database
 
-        const companyDB = await switchDB('galil','employee', userSchema)
+        const companyDB = await switchDB(companyName,'employee', userSchema)
         //2) point to users collections in companyDB
         const userModel= await getDBModel(companyDB,'employee',userSchema)
         let user
@@ -212,7 +214,7 @@ const login_post = catchAsync( async (req,res,next) =>{
         res.status(400).json({error})
     }
 
-})
+}
 
 const maxAge = 3 * 24 * 60 * 60;
 //takes user id from database
