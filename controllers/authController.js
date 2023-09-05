@@ -151,7 +151,8 @@ const signup_post = async (req, res) => {
 };
  const paraseCompanyName = (email)=>{
      const domain = email.match(/@(.+)\.com$/);
-
+     //amdocs
+     //amdocs.mustafa
      if (domain && domain.length > 1) {
          const companyName = domain[1];
          console.log(companyName);
