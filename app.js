@@ -4,6 +4,7 @@ const cors = require("cors");
 const adminRoutes = require('./routes/adminRoutes')
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
+const emailRoutes = require('./routes/emailRoutes')
 const cookieParser = require ('cookie-parser')
 const bodyParser = require('body-parser');
 const {currentUser,onlyForUsers,usersOnly, isLoggedIn} = require("./middleware/authMiddware");
@@ -59,6 +60,7 @@ app.get('*', currentUser)//apply to every route (protect routes)
 app.get('/', (req, res) => res.render('home'));
 
 app.use("/",authRoutes)
+app.use("/",emailRoutes)
 app.use('/admin',adminRoutes)
 
 app.use("/home",userRoutes)
