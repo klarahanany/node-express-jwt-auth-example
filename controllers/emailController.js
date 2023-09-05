@@ -2,6 +2,8 @@ const nodemailer = require('nodemailer');
 const {company_Exist,paraseCompanyName} = require('./authController')
 const {switchDB, getDBModel} = require("../multiDatabaseHandler");
 const userSchema = require('../models/userModel')
+const jwt = require('jsonwebtoken')
+const bcrypt  = require('bcrypt')
 const forgetPass_post = async (req, res) => {
     const email = req.body.email;
     const companyName =  paraseCompanyName(email);
@@ -17,7 +19,7 @@ const forgetPass_post = async (req, res) => {
     const companyDB = await switchDB(companyName,'employee', userSchema)
     //2) point to users collections in companyDB
     const userModel= await getDBModel(companyDB,'employee',userSchema)
-    console.log(email)
+    console.log('forgotpass: '+ email)
     try {
         const oldUser = await userModel.findOne({ email })
         if (!oldUser) {
@@ -55,6 +57,7 @@ const forgetPass_post = async (req, res) => {
         });
     }
     catch (err) {
+        console.log(err)
     }
 }
 const resetPassword_get = async (req, res) => {
