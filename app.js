@@ -1,9 +1,8 @@
 const express = require('express');
 
 const cors = require("cors");
-const companyModel = require('./models/companyModel')
+const adminRoutes = require('./routes/adminRoutes')
 const authRoutes = require('./routes/authRoutes')
-const companyRoutes = require('./routes/companyRoutes')
 const userRoutes = require('./routes/userRoutes')
 const cookieParser = require ('cookie-parser')
 const bodyParser = require('body-parser');
@@ -60,16 +59,9 @@ app.get('*', currentUser)//apply to every route (protect routes)
 app.get('/', (req, res) => res.render('home'));
 
 app.use("/",authRoutes)
-app.use('/:companyName',async (req, res, next)=>{
-    let companyName = req.params.companyName
-    const MainDB = await switchDB('MainDB','admins', userSchema)
-    const adminsModel= await getDBModel(MainDB,'admins',userSchema)
-    if (!(await adminsModel.findOne({companyName})))  return res.status(404).send('Company not found');
-    req.companyName = companyName;
-    next();
-},companyRoutes)
+app.use('/admin',adminRoutes)
 
-app.use("/dashboard",userRoutes)
+app.use("/home",userRoutes)
 app.get('/smoothies',(req, res) => res.render('smoothies'));
 
 module.exports = app;

@@ -149,18 +149,39 @@ const signup_post = async (req, res) => {
         res.status(400).json({ error });
     }
 };
+ const paraseCompanyName = (email)=>{
+     const domain = email.match(/@(.+)\.com$/);
 
+     if (domain && domain.length > 1) {
+         const companyName = domain[1];
+         console.log(companyName);
+         return companyName
+     } else {
+         console.log("Invalid email address");
+     }
+}
 
+const company_Exist= async(companyName)=>{
+
+    const MainDB = await switchDB('MainDB','admins', userSchema)
+    const adminsModel= await getDBModel(MainDB,'admins',userSchema)
+    return await adminsModel.findOne({companyName})
+}
 const login_post = async (req,res,next) =>{
-    const username  = req.body.username
+     const companyName = paraseCompanyName(req.body.username)
     const password = req.body.password
-    const { companyName } = req.params;
-    console.log(companyName)
-    const email = req.body.email
-    let viaEmail= false, viaUsername =false
+    //const username = req.body.username
+    const email = req.body.username
+
     // Look up the company in your database to ensure it exists
 
     try{
+         //check if company is defined
+         if(!(await company_Exist(companyName))) return res.status(404).json({
+             errors: {
+                 status: `The company ${companyName} is not registered.`,
+             },
+         });
         req.companyName = companyName;
         //1)  Determine the tenant company database
 
@@ -170,19 +191,16 @@ const login_post = async (req,res,next) =>{
         let user
         //check if email or password or username exist in input
         if(email && !password) return next(new AppError ('Please provide email and password!',400))
-        else if (username && !password )return next(new AppError ('Please provide email and password!',400))
 
         //check if the input was email or username
-        if(username)
-         user = await userModel.findOne({username}).select('+password')
-        else if (email != null)  user = await userModel.findOne({email}).select('+password')
+        if (email != null)  user = await userModel.findOne({email}).select('+password')
+        console.log('user: '+ user)
         if (!user) {
             return res.status(401).json({
                 errors: {
                     status: 'Invalid credentials',
                 },
             });
-            next()
         }
         //if user exists in database
 

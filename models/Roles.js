@@ -1,7 +1,7 @@
 const Roles ={
-    'admin': 'Admin',
-    'configurator': 'Configurator',
-    'viewer': 'Viewer'
+    admin: 'admin',
+    configurator: 'configurator',
+    viewer: 'viewer'
 }
 
 module.exports = Roles

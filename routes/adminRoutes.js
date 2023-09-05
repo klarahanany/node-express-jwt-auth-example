@@ -1,18 +1,22 @@
 const express = require('express')
 const router = express.Router()
 const authController = require('../controllers/authController')
-const {render} = require("ejs");
-router.get('/signup', authController.signup_get)
+const authRoutes = require("./authRoutes");
+const  {verifyUser,isLoggedIn, isAdmin}= require('../middleware/authMiddware')
 
-router.post('/signup', authController.signup_post)
+router.use('/', authRoutes)
 
-router.get('/login', authController.login_get)
+// Protect all routes after this middleware
+router.use(isLoggedIn);
 
-router.post('/login', authController.login_post)
+authController.restrictTo('admin')
+router.route('/dashboard').
+get((req,res)=> {
 
-router.get('/logout', authController.logout_get)
+    res.status(200).json({
 
-router.get('/loginError' ,(req,res)=>{
-    res.render('loginError')
-})
+        message: 'admin dashboard'
+    })
+} )
+
 module.exports = router
