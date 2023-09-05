@@ -56,15 +56,6 @@ const getDBModel = async (database, modelName, schema) => {
     return database.model(modelName, schema) // create/get new collection (modelName)  into company(db) with
 }
 
-const initTennants = async (tenantData) => {
-    const tenantDB = await switchDB('MainDB', TenantSchemas);
-    const tenantModel = await getDBModel(tenantDB, 'tenant');
-    // await tenantModel.deleteMany({});
-    await tenantModel.create(tenantData);//creating admin in mainDB(AppTenants)
-    const UserDB=  await switchDB(tenantData.companyName, CompanySchemas)
-    const EmployeeModel = await getDBModel(UserDB, 'employee');
-    return EmployeeModel;
-}
 
 /** @description on signup, handle new db connection and make
  * new db in company name + employee collections
@@ -87,7 +78,7 @@ const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
         const logsModel = await getDBModel(companyDB, 'logs',logSchema);
         const rulesModel = await getDBModel(companyDB, 'rules',ruleSchema);
         await EmployeeModel.create(adminData)
-        const admin = await EmployeeModel.findOne({username : 'm13'} )
+        const admin = await EmployeeModel.findOne({username : adminData.username} )
 
         // Convert the JavaScript object to a JSON string using JSON.stringify
         resolve ({status: true, id: admin._id});
@@ -98,34 +89,12 @@ const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
 })
 }
 
-
-const onLogin_RedirectDatabase = async()=>{
-    //1) switch DB to AppTenant
-
-
-}
 const getAllTenants = async () => {
     const tenantDB = await switchDB('MainDB', TenantSchemas)
     const tenantModel = await getDBModel(tenantDB, 'tenant')
-    const tenants = await tenantModel.find({})
     return tenants
 }
 
-const initEmployees = async (name, email) => {
-    const customers = await getAllTenants()
-    const createEmployees = customers.map(async (tenant) => {
-        const companyDB = await switchDB(tenant.companyName, CompanySchemas)
-        const employeeModel = await getDBModel(companyDB, 'employee')
-        await employeeModel.deleteMany({})
-        return employeeModel.create({
-            employeeId: Math.floor(Math.random() * 10000).toString(),
-            name: name,
-            email: email,
-            companyName: tenant.companyName,
-        })
-    })
-    const results = await Promise.all(createEmployees)
-}
 
 const listAllEmployees = async () => {
         const customers = await getAllTenants()
@@ -139,4 +108,4 @@ const listAllEmployees = async () => {
     }
 
 
-module.exports  = {onSignupNewDatabase,initTennants,initEmployees,listAllEmployees ,getAllTenants,switchDB,getDBModel}
+module.exports  = {onSignupNewDatabase,listAllEmployees ,getAllTenants,switchDB,getDBModel}

@@ -9,8 +9,8 @@ const AppError = require("../utils/appError");
 const isLoggedIn = catchAsync(  async (req, res, next) => {
     if (!req.cookies.jwt) {
         res.status(401).json({
-            status: 'fail',
-            message: 'Unauthorized!',
+            status: 'error',
+            message: 'Unauthorized: not logged in.',
         });
         return next(new AppError('You are not logged in.', 401))
     }
@@ -145,7 +145,15 @@ const currentUser =  (req,res,next) => {
 // Middleware to check user role
 function isAdmin(req, res, next) {
 
-        const token = req.header('Authorization');
+    let token
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith('Bearer')
+    ) {
+        token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies.jwt) {// Retrieve the JWT from the HttpOnly cookie
+        token = req.cookies.jwt;
+    }
 
         if (!token) {
             return res.status(401).json({ message: 'Authorization token missing' });
