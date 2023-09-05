@@ -1,7 +1,22 @@
 const nodemailer = require('nodemailer');
-
+const {company_Exist,paraseCompanyName} = require('./authController')
+const {switchDB, getDBModel} = require("../multiDatabaseHandler");
+const userSchema = require('../models/userModel')
 const forgetPass_post = async (req, res) => {
     const email = req.body.email;
+    const companyName =  paraseCompanyName(email);
+    //check if company is defined
+    if(!(await company_Exist(companyName))) return res.status(404).json({
+        errors: {
+            status: `The company ${companyName} is not registered.`,
+        },
+    });
+    req.companyName = companyName;
+    //1)  Determine the tenant company database
+
+    const companyDB = await switchDB(companyName,'employee', userSchema)
+    //2) point to users collections in companyDB
+    const userModel= await getDBModel(companyDB,'employee',userSchema)
     console.log(email)
     try {
         const oldUser = await userModel.findOne({ email })
@@ -44,6 +59,17 @@ const forgetPass_post = async (req, res) => {
 }
 const resetPassword_get = async (req, res) => {
     const { id, token } = req.params
+    const companyName =  paraseCompanyName(token.companyName);
+    //check if company is defined
+    if(!(await company_Exist(companyName))) return res.status(404).json({
+        errors: {
+            status: `The company ${companyName} is not registered.`,
+        },
+    });
+
+    const companyDB = await switchDB(companyName,'employee', userSchema)
+    //2) point to users collections in companyDB
+    const userModel= await getDBModel(companyDB,'employee',userSchema)
     const oldUser = await userModel.findOne({ _id: id })
     if (!oldUser) {
         res.json({ status: "User Not Exists!!" })
@@ -63,8 +89,19 @@ const resetPassword_get = async (req, res) => {
 const resetPassword_post = async (req, res) => {
     const { id, token } = req.params
     const { password, confirmpassword } = req.body
-    console.log(password)
-    console.log(confirmpassword)
+
+    const companyName =  paraseCompanyName(token.companyName);
+    //check if company is defined
+    if(!(await company_Exist(companyName))) return res.status(404).json({
+        errors: {
+            status: `The company ${companyName} is not registered.`,
+        },
+    });
+
+    const companyDB = await switchDB(companyName,'employee', userSchema)
+    //2) point to users collections in companyDB
+    const userModel= await getDBModel(companyDB,'employee',userSchema)
+
 
     const oldUser = await userModel.findOne({ _id: id })
     if (!oldUser) {
@@ -84,10 +121,26 @@ const resetPassword_post = async (req, res) => {
                     },
 
                 })
+            //change admin pass in mainDB too
+            const mainDB = await switchDB('MainDB','admins', userSchema)
+            //2) point to users collections in companyDB
+            const userModel= await getDBModel(mainDB,'admins',userSchema)
+            await userModel.updateOne({
+                    _id: id
+                },
+                {
+                    $set: {
+                        password: encryptedPass
+                    },
+
+                })
+            res.render("resetPass", { email: verify.email, status: "verified" })
+        }
+        else{
+            res.render("resetPass", { email: verify.email, status: "error" })
         }
         // res.json({status :"verified"})
 
-        res.render("resetPass", { email: verify.email, status: "verified" })
     }
     catch (err) {
         res.json({ status: "Not Verified" })
@@ -96,3 +149,5 @@ const resetPassword_post = async (req, res) => {
     // res.send(req.params)
 
 }
+
+module.exports = {forgetPass_post,resetPassword_post,resetPassword_get}

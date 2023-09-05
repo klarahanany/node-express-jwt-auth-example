@@ -266,4 +266,4 @@ const restrictTo = (...roles) => {
 };
 
 
-module.exports = {signup_get,signup_post,login_post,login_get,logout_get,restrictTo}
+module.exports = {signup_get,signup_post,login_post,login_get,logout_get,restrictTo, company_Exist, paraseCompanyName}
