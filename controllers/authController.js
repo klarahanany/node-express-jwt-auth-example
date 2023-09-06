@@ -174,6 +174,9 @@ const login_post = async (req,res,next) =>{
     //const username = req.body.username
     const email = req.body.username
 
+
+
+
     // Look up the company in your database to ensure it exists
 
     try{
