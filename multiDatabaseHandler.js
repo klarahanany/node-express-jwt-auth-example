@@ -71,6 +71,7 @@ const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
         //2) create new admin user in AppTenant
         // const tenantModel = await getDBModel(tenantDB, 'admins');//point to tenant collection
         await adminModel.create(adminData);//creating admin in mainDB(AppTenants)
+
         //3) create new DB in company name
         const companyDB=  await switchDB(adminData.companyName,'admins', adminSchema)
         //4) save same admin into the new company database - employee collections
@@ -78,7 +79,7 @@ const onSignupNewDatabase = async (adminModel,adminSchema, adminData) =>{
         const logsModel = await getDBModel(companyDB, 'logs',logSchema);
         const rulesModel = await getDBModel(companyDB, 'rules',ruleSchema);
         await EmployeeModel.create(adminData)
-        const admin = await EmployeeModel.findOne({username : adminData.username} )
+        const admin = await EmployeeModel.findOne({email : adminData.email} )
 
         // Convert the JavaScript object to a JSON string using JSON.stringify
         resolve ({status: true, id: admin._id});

@@ -9,6 +9,8 @@ const mongoOptions = {
     autoIndex: true,
     connectTimeoutMS: 10000,
     socketTimeoutMS: 30000,
+    minPoolSize : 5,
+    maxPoolSize : 10
 
 }
 
