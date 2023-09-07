@@ -5,14 +5,14 @@ const sendVerificationEmail = (email, verificationToken) =>{
     const transporter = nodemailer.createTransport({
         service: 'Gmail',
         auth: {
-            user: '',
-            pass: '',
+            user: 'n8mabujamos@gmail.com',
+            pass: 'kimimpeypunohrn',
         },
     });
 
     const mailOptions = {
-        from: '',
-        to: email,
+        from: 'n8mabujamos@gmail.com',
+        to: 'part2project2023@gmail.com',
         subject: 'Account Verification',
         text: `Click the following link to verify your account: http://localhost:3001/verify/${verificationToken}`,
     };
