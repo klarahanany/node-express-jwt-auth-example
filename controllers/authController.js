@@ -1,11 +1,15 @@
 require('dotenv').config();
 const Roles = require('../models/Roles')
-const userModel = require('../models/userModel.js')
+const userModel = require('../models/userModel')
 const bcrypt  = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const AppError = require("../utils/appError");
 const catchAsync = require('../utils/catchAsync')
 
+
+
+
+  
 const checkPasswordStrength = (password) => {
     // Define your criteria for a strong password here
     const minLength = 8;
@@ -13,7 +17,7 @@ const checkPasswordStrength = (password) => {
     const minLowerCase = 1;
     const minNumbers = 1;
     const minSpecialChars = 1;
-    const specialChars = /[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]/;
+   
 
     // Check password length
     if (password.length < minLength) {
@@ -35,10 +39,7 @@ const checkPasswordStrength = (password) => {
         return 'Password must contain at least one number.';
     }
 
-    // Check for special characters
-    if (password.replace(specialChars, '').length < minSpecialChars) {
-        return 'Password must contain at least one special character (!@#$%^&*()_+{}[]:;<>,.?~\\-).';
-    }
+  
 
     return null; // Password meets all criteria
 };
@@ -99,14 +100,12 @@ const createCookie = (token, res)=>{
 const signup_post = async (req, res) => {
     const { username, password, email, firstName, lastName, passwordConfirm } = req.body;
     const role = Roles.viewer;
-    const userLogs = []; // Initialize userLogs as an empty array
 
     // Check password strength
     const passwordStrengthError = checkPasswordStrength(password);
     if (passwordStrengthError) {
         return res.status(400).json({ error: passwordStrengthError });
     }
- 
 
     try {
         const existingEmailUser = await userModel.findOne({ email: email });
@@ -128,7 +127,6 @@ const signup_post = async (req, res) => {
             });
         }
 
-
         if (existingUsernameUser) {
             return res.status(400).json({
                 errors: {
@@ -144,13 +142,14 @@ const signup_post = async (req, res) => {
             email,
             password,
             role,
-            userLogs,
+            isVerified: false, // Default to unverified
             passwordConfirm,
         });
 
+       
+
         const token = createToken(user._id);
         //sending the token as a cookie to frontend
-        //aaa
         createCookie(token, res);
 
         res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body

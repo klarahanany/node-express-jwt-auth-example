@@ -16,6 +16,10 @@ const UserSchema = new mongoose.Schema({
         lowercase :true,
         validate : [isEmail, 'Please enter a valid email']
     },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
     password : {
         type : String,
         require : [true, 'Please enter a password'],
@@ -140,5 +144,15 @@ UserSchema.methods.createPasswordResetToken = function() {
 
 
 const UserModel= mongoose.model('user', UserSchema)
+const validate = (data) => {
+	const schema = Joi.object({
+		firstName: Joi.string().required().label("First Name"),
+		lastName: Joi.string().required().label("Last Name"),
+		email: Joi.string().email().required().label("Email"),
+		password: passwordComplexity().required().label("Password"),
+	});
+	return schema.validate(data);
+};
 
-module.exports = UserModel
+module.exports = {UserModel, validate };
+
