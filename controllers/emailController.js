@@ -14,24 +14,33 @@ const verifyEmail = async (req, res) => {
     try {
         //verify token
         const decoded = await promisify(jwt.verify)(token, process.env.SECRET_CODE);
-
+        const {companyName, email} = decoded
+        console.log('email: ' +  email)
         //1) swtichDB to AppTenant
-        const mainDB = await switchDB('MainDB','admins', userSchema)
+        const db = await switchDB(companyName,'employees', userSchema)
         //2) create new admin user in AppTenant
-        const userModel= await getDBModel(mainDB,'admins',userSchema)
+        const userModel= await getDBModel(db,'employees',userSchema)
         // Verify the token and update the user's 'isVerified' status
-        console.log(decoded.companyName)
-        const user = await userModel.findOne({companyName: decoded.companyName});
-        if (user) {
 
-                user.isVerified = true;
-                await user.save();
-               // res.redirect("/login"); // Redirect to the login page after successful verification
-            res.status(200).json({ status: 'user verifed.'});
-
-        } else {
-            res.status(404).json({ error: "User not found" });
+            let myQuery = {email };
+            let newValue = { $set: {isVerified : true} };
+            await userModel.updateOne(myQuery,newValue)
+        try{
+            // //change admin pass in mainDB too
+            const mainDB = await switchDB('MainDB','admins', userSchema)
+            //2) point to users collections in companyDB
+            const adminModel= await getDBModel(mainDB,'admins',userSchema)
+            await adminModel.updateOne(myQuery ,newValue)
         }
+               catch (e) {
+                   console.log('maindb:'+ e)
+               }
+
+               // await user.save();
+               // res.redirect("/login"); // Redirect to the login page after successful verification
+            res.status(200).json({ status: 'user verified.'});
+
+
     } catch (error) {
         // Handle errors
         console.error(error);
