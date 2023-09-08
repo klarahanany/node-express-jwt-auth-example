@@ -8,7 +8,7 @@ const catchAsync = require('../utils/catchAsync')
 const mongoose = require("mongoose");
 const mongoose2 =require('../server')
 const {onSignupNewDatabase,switchDB,getDBModel} = require('../multiDatabaseHandler')
-const sendVerificationEmail = require("../utils/email");
+const sendVerificationEmail = require("./emailController");
 // handle errors
 
 
