@@ -6,6 +6,43 @@ const jwt = require('jsonwebtoken')
 const bcrypt  = require('bcrypt')
 const {promisify} = require("util");
 
+
+
+const verifyEmail = async (req, res) => {
+    const {  token } = req.params;
+
+    try {
+        //verify token
+        const decoded = await promisify(jwt.verify)(token, process.env.SECRET_CODE);
+
+        //1) swtichDB to AppTenant
+        const mainDB = await switchDB('MainDB','admins', userSchema)
+        //2) create new admin user in AppTenant
+        const userModel= await getDBModel(mainDB,'admins',userSchema)
+        // Verify the token and update the user's 'isVerified' status
+        console.log(decoded.companyName)
+        const user = await userModel.findOne({companyName: decoded.companyName});
+        if (user) {
+
+                user.isVerified = true;
+                await user.save();
+               // res.redirect("/login"); // Redirect to the login page after successful verification
+            res.status(200).json({ status: 'user verifed.'});
+
+        } else {
+            res.status(404).json({ error: "User not found" });
+        }
+    } catch (error) {
+        // Handle errors
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+
+
+
+
 //const companyName = 'gmail';
 const forgetPass_post = async (req, res) => {
     const email = req.body.email;
@@ -67,6 +104,7 @@ const forgetPass_post = async (req, res) => {
 
 const resetPassword_get = async (req, res) => {
     const { id, token } = req.params
+    //verify token
     const decoded = await promisify(jwt.verify)(token, process.env.SECRET_CODE);
     const companyName =  decoded.companyName
     //check if company is defined
@@ -158,4 +196,4 @@ const resetPassword_post = async (req, res) => {
 
 }
 
-module.exports = {forgetPass_post,resetPassword_post,resetPassword_get}
+module.exports = {forgetPass_post,resetPassword_post,resetPassword_get,verifyEmail}

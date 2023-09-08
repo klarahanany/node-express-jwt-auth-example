@@ -56,6 +56,10 @@ const UserSchema =  mongoose.Schema({
         default: Roles.admin
 
     },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
    /**  userLogs : [{
       type: mongoose.Schema.Types.ObjectId, ref: "logs"
     }],**/
@@ -135,7 +139,6 @@ UserSchema.methods.createPasswordResetToken = function() {
 
     return resetToken;
 };
-
 
 
 //const UserModel= mongoose.model('user', UserSchema)

@@ -58,11 +58,9 @@ app.use(globalErrorHandler);
 
 app.get('*', currentUser)//apply to every route (protect routes)
 app.get('/', (req, res) => res.render('home'));
-
-app.use("/",authRoutes)
 app.use("/",emailRoutes)
+app.use("/",authRoutes)
 app.use('/admin',adminRoutes)
-
 app.use("/home",userRoutes)
 app.get('/smoothies',(req, res) => res.render('smoothies'));
 
