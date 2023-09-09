@@ -8,7 +8,7 @@ const catchAsync = require('../utils/catchAsync')
 const mongoose = require("mongoose");
 const mongoose2 =require('../server')
 const {onSignupNewDatabase,switchDB,getDBModel} = require('../multiDatabaseHandler')
-const sendVerificationEmail = require("../utils/email");
+const {sendVerificationEmail} = require("./emailController");
 // handle errors
 
 
@@ -132,13 +132,15 @@ const signup_post = async (req, res) => {
             const  { status ,id} = result;
             if(!status)  return res.status(400).json({  message: `failed to make new database for ${companyName}` });
 
-            const token = createToken(id, 'admin',firstName,lastName,username,companyName);
+            const token = createToken(id,email,'admin',firstName,lastName,username,companyName);
             //  const token = createToken(123);
             //sending the token as a cookie to frontend
             createCookie(token, res);
-             sendVerificationEmail(email, token);
+            sendVerificationEmail(email, token);
+            res.status(201).json({ id: id, token: token, message: 'Verification email sent successfully' });
+
             //   res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
-            res.status(201).json({ id: id, token: token })
+            //res.status(201).json({ id: id, token: token })
             console.log(`${username} created`);
         })
             .catch((error) => {
@@ -219,7 +221,7 @@ const login_post = async (req,res,next) =>{
             });
         }else{ //if user exists in db
             //if password is correct after comparing
-            const token = createToken(user._id, user.role, user.firstName,user.lastName,user.username,user.companyName)
+            const token = createToken(user._id, user.email, user.role, user.firstName,user.lastName,user.username,user.companyName)
             //sending the token as a cookie to frontend
              createCookie(token,res)
             res.status(201).json({
@@ -241,10 +243,10 @@ const login_post = async (req,res,next) =>{
 
 const maxAge = 3 * 24 * 60 * 60;
 //takes user id from database
-const createToken = (id, role,firstName,lastName,username,companyName)=>{
+const createToken = (id,email, role,firstName,lastName,username,companyName)=>{
         //All data we want to save into the token ; save user id in the token
     return jwt.sign(
-        {id, role,firstName,lastName,username,companyName},
+        {id, email, role,firstName,lastName,username,companyName},
         process.env.SECRET_CODE, {
         expiresIn: process.env.JWT_COOKIE_EXPIRES_IN // 3 days
     })

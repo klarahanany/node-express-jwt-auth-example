@@ -10,7 +10,7 @@
         console.log(status)
         if (JSON.parse(status) === "verified") {
             if (confirm("Do u want to login?")) {
-                window.location.href = "http://localhost:3000/";
+                window.location.href = "http://localhost:3001/";
             }
         }else if(JSON.parse(status) === "error"){
             alert("not same passsword")

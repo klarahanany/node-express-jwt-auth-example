@@ -1,135 +1,167 @@
 <%- include('partials/header'); -%>
 
 <form action="/signup" method="POST">
-    <h2>Sign up</h2>
-    <label for="Firstname">First name</label>
-    <input type="text" name="firstName" required />
-    <label for="Lastname">Last name</label>
-    <input type="text" name="lastName" required />
+  <h2>Sign up</h2>
+  <label for="Firstname">First name</label>
+  <input type="text" name="firstName" required />
+  <label for="Lastname">Last name</label>
+  <input type="text" name="lastName" required />
 
-    <label for="username">Username</label>
-    <input type="text" name="username" required />
-    <div class="username error"></div>
+  <label for="username">Username</label>
+  <input type="text" name="username" required />
+  <div class="username error"></div>
 
-    <label for="phoneNumber">Phone number</label>
-    <input type="text" name="phoneNumber" required />
-    <div class="phoneNumber error"></div>
+  <label for="phoneNumber">Phone number</label>
+  <input type="text" name="phoneNumber" required />
+  <div class="phoneNumber error"></div>
 
-    <label for="companyName">Company</label>
-    <input type="text" name="companyName" required />
-    <div class="companyName error"></div>
+  <label for="companyName">Company</label>
+  <input type="text" name="companyName" required />
+  <div class="companyName error"></div>
 
-    <label for="email">Email</label>
-    <input type="text" name="email" required />
-    <div class="email error"></div>
+  <label for="email">Email</label>
+  <input type="text" name="email" required />
+  <div class="email error"></div>
 
-    <label for="password">Password</label>
-    <input type="password" name="password" required />
-    <div class="password error"></div>
-    <label for="passwordConfirm">Confirm Password</label>
-    <input type="password" name="passwordConfirm" required />
-    <div class="password error"></div>
-        <div class="password-strength-error" style="color: red"></div>
-        <button>Sign up</button>
-        <div class="error-message" style="color: red;"></div>
-
+  <label for="password">Password</label>
+  <input type="password" name="password" required />
+  <div class="password error"></div>
+  <label for="passwordConfirm">Confirm Password</label>
+  <input type="password" name="passwordConfirm" required />
+  <div class="passwordConfirm error"></div>
+  <div class="password error"></div>
+  <div class="password-strength-error" style="color: red"></div>
+  <button>Sign up</button>
+  <div class="error-message" style="color: red"></div>
+  <div id="verification-message"></div>
 </form>
 <%- include('partials/footer'); -%>
 
 <script>
-    const form = document.querySelector('form');
-    const emailError = document.querySelector('.email.error');
-    const passwordError = document.querySelector('.password.error');
-    const passwordStrengthError = document.querySelector(".password-strength-error"); // Reference to the password strength error element
-    const usernameError = document.querySelector('.username.error');
-    const companyError = document.querySelector('.companyName.error');
-    const phoneError = document.querySelector('.phoneNumber.error');
-    const errorMessage = document.querySelector('.error-message'); // General error message container
+  const form = document.querySelector("form");
+  const emailError = document.querySelector(".email.error");
+  const passwordError = document.querySelector(".password.error");
+  const passwordStrengthError = document.querySelector(
+    ".password-strength-error"
+  ); // Reference to the password strength error element
+  const passwordConfirmError = document.querySelector(".passwordConfirm.error"); // Reference to the password confirmation error element
+  const usernameError = document.querySelector(".username.error");
+  const companyError = document.querySelector(".companyName.error");
+  const phoneError = document.querySelector(".phoneNumber.error");
+  const errorMessage = document.querySelector(".error-message"); // General error message container
 
-    // Function to check password strength
-    const checkPasswordStrength = (password) => {
-        const minLength = 6;
-        const minUpperCase = 1;
-        const minLowerCase = 1;
-        const minNumbers = 1;
+  // Function to check if password and password confirmation match
+  const checkPasswordMatch = () => {
+    const password = form.password.value;
+    const passwordConfirm = form.passwordConfirm.value;
 
-        if (password.length < minLength) {
-            return 'Password must be at least 8 characters long.';
-        }
+    if (password !== passwordConfirm) {
+      passwordConfirmError.textContent = "Passwords do not match.";
+      return false; // Return false if passwords don't match
+    } else {
+      passwordConfirmError.textContent = ""; // Clear the error message if passwords match
+      return true; // Return true if passwords match
+    }
+  };
 
-        if (password.replace(/[^A-Z]/g, '').length < minUpperCase) {
-            return 'Password must contain at least one uppercase letter.';
-        }
+  // Function to check password strength
+  const checkPasswordStrength = (password) => {
+    const minLength = 6;
+    const minUpperCase = 1;
+    const minLowerCase = 1;
+    const minNumbers = 1;
 
-        if (password.replace(/[^a-z]/g, '').length < minLowerCase) {
-            return 'Password must contain at least one lowercase letter.';
-        }
+    if (password.length < minLength) {
+      return "Password must be at least 6 characters long.";
+    }
 
-        if (password.replace(/[^0-9]/g, '').length < minNumbers) {
-            return 'Password must contain at least one number.';
-        }
+    if (password.replace(/[^A-Z]/g, "").length < minUpperCase) {
+      return "Password must contain at least one uppercase letter.";
+    }
 
+    if (password.replace(/[^a-z]/g, "").length < minLowerCase) {
+      return "Password must contain at least one lowercase letter.";
+    }
 
-        return null; // Password meets all criteria
-    };
+    if (password.replace(/[^0-9]/g, "").length < minNumbers) {
+      return "Password must contain at least one number.";
+    }
 
-    // Function to update password strength message
-    const updatePasswordStrengthMessage = () => {
-        const password = form.password.value;
-        const passwordStrengthErrorMessage = checkPasswordStrength(password);
-        passwordStrengthError.textContent = passwordStrengthErrorMessage || ""; // Display password strength error message or clear it if the password meets the criteria
-    };
+    return null; // Password meets all criteria
+  };
 
-    // Add an input event listener to the password field
-    form.password.addEventListener("input", updatePasswordStrengthMessage);
+  // Function to update password strength message
+  const updatePasswordStrengthMessage = () => {
+    const password = form.password.value;
+    const passwordStrengthErrorMessage = checkPasswordStrength(password);
+    passwordStrengthError.textContent = passwordStrengthErrorMessage || ""; // Display password strength error message or clear it if the password meets the criteria
+  };
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        // Reset errors
-        phoneError.textContent = '';
-        emailError.textContent = '';
-        passwordError.textContent = '';
-        passwordStrengthError.textContent = ""; // Clear password strength error
-        usernameError.textContent = '';
-        errorMessage.textContent = ''; // Clear general error message
-        companyError.textContent = '';
-        // Get values
-        const username = form.username.value;
-        const email = form.email.value;
-        const password = form.password.value;
-        const firstName = form.firstName.value;
-        const lastName = form.lastName.value;
-        const passwordConfirm = form.passwordConfirm.value;
-        const companyName = form.companyName.value
-        const phoneNumber = form.phoneNumber.value
+  // Add an input event listener to the password field
+  form.password.addEventListener("input", updatePasswordStrengthMessage);
+  form.passwordConfirm.addEventListener("input", checkPasswordMatch);
 
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    // Reset errors
+    phoneError.textContent = "";
+    emailError.textContent = "";
+    passwordError.textContent = "";
+    passwordStrengthError.textContent = ""; // Clear password strength error
+    usernameError.textContent = "";
+    errorMessage.textContent = ""; // Clear general error message
+    companyError.textContent = "";
+    // Get values
+    const username = form.username.value;
+    const email = form.email.value;
+    const password = form.password.value;
+    const firstName = form.firstName.value;
+    const lastName = form.lastName.value;
+    const passwordConfirm = form.passwordConfirm.value;
+    const companyName = form.companyName.value;
+    const phoneNumber = form.phoneNumber.value;
 
-        // Check password strength
-        const passwordStrengthErrorMessage = checkPasswordStrength(password);
-        if (passwordStrengthErrorMessage) {
-            passwordStrengthError.textContent = passwordStrengthErrorMessage; // Display password strength error message
-            return; // Exit the function if password strength criteria are not met
-        }
-        // API call to server
-        const res = await fetch('/signup', {
-            method: 'POST',
-            body: JSON.stringify({ username, email, password, firstName, lastName, passwordConfirm,companyName,phoneNumber }),
-            headers: { 'Content-type': 'application/json' },
-        });
+    // Check password strength
+    const passwordStrengthErrorMessage = checkPasswordStrength(password);
+    if (passwordStrengthErrorMessage) {
+      passwordStrengthError.textContent = passwordStrengthErrorMessage; // Display password strength error message
+      return; // Exit the function if password strength criteria are not met
+    }
 
-        // After getting response from the server
-        const data = await res.json();
-        if (data.errors) {
-            emailError.textContent = data.errors.email;
-            passwordError.textContent = data.errors.password;
-            usernameError.textContent = data.errors.username;
-            companyError.textContent = data.errors.companyName;
-            phoneError.textContent = data.errors.phoneNumber;
-        }
-        if (data.user) {
-            location.assign('/');
-        } else if (data.error) {
-            errorMessage.textContent = data.error.message; // Display general error message
-        }
+    // API call to server
+    const res = await fetch("/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+        passwordConfirm,
+        companyName,
+        phoneNumber,
+      }),
+      headers: { "Content-type": "application/json" },
     });
+
+    // After getting response from the server
+    const data = await res.json();
+    if (data.errors) {
+      emailError.textContent = data.errors.email;
+      passwordError.textContent = data.errors.password;
+      usernameError.textContent = data.errors.username;
+      companyError.textContent = data.errors.companyName;
+      phoneError.textContent = data.errors.phoneNumber;
+    }
+    if (data.user) {
+      location.assign("/");
+    } else if (data.message) {
+      const verificationMessage = document.getElementById(
+        "verification-message"
+      );
+      verificationMessage.textContent = data.message; // Display the verification message
+    } else if (data.error) {
+      errorMessage.textContent = data.error.message; // Display general error message
+    }
+  });
 </script>
