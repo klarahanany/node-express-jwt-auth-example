@@ -8,6 +8,9 @@ const router = express.Router();
 
 // Protect all routes after this middleware
 router.use(isLoggedIn);
+
+
+
 router.route('/').
     get((req,res)=> {
 

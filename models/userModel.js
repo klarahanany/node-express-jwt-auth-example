@@ -125,6 +125,7 @@ UserSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
     return false;
 };
 
+//generate new token only for password reset
 UserSchema.methods.createPasswordResetToken = function() {
     const resetToken = crypto.randomBytes(32).toString('hex');
 
@@ -135,7 +136,7 @@ UserSchema.methods.createPasswordResetToken = function() {
 
     // console.log({ resetToken }, this.passwordResetToken);
 
-    this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; //10 mins expire
 
     return resetToken;
 };

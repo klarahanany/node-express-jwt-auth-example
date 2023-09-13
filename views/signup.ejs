@@ -127,7 +127,7 @@
             phoneError.textContent = data.errors.phoneNumber;
         }
         if (data.user) {
-            location.assign('/');
+
         } else if (data.error) {
             errorMessage.textContent = data.error.message; // Display general error message
         }

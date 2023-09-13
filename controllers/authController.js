@@ -8,7 +8,7 @@ const catchAsync = require('../utils/catchAsync')
 const mongoose = require("mongoose");
 const mongoose2 =require('../server')
 const {onSignupNewDatabase,switchDB,getDBModel} = require('../multiDatabaseHandler')
-const sendVerificationEmail = require("./emailController");
+const {sendVerificationEmail} = require("./emailController");
 // handle errors
 
 
@@ -133,12 +133,12 @@ const signup_post = async (req, res) => {
             if(!status)  return res.status(400).json({  message: `failed to make new database for ${companyName}` });
 
             const token = createToken(id,email,'admin',firstName,lastName,username,companyName);
-            //  const token = createToken(123);
+
             //sending the token as a cookie to frontend
             createCookie(token, res);
-             sendVerificationEmail(email, token);
+             sendVerificationEmail(email,token);
             //   res.status(201).json({ user: user._id, token: token }); // send back to frontend as json body
-            res.status(201).json({ id: id, token: token })
+             res.status(201).json({  message: 'Verification email sent successfully' });
             console.log(`${username} created`);
         })
             .catch((error) => {
@@ -163,6 +163,17 @@ const signup_post = async (req, res) => {
      }
 }
 
+const paraseCompanyNameFromUsername = (username) => {
+    const domain = username.split(".");
+    //amdocs.mustafa
+    if (domain && domain.length > 1) {
+        const companyName = domain[0];
+        return companyName
+    } else {
+        console.log("Invalid username");
+    }
+}
+
 const company_Exist= async(companyName)=>{
 
     const MainDB = await switchDB('MainDB','admins', userSchema)
@@ -170,36 +181,51 @@ const company_Exist= async(companyName)=>{
     return await adminsModel.findOne({companyName})
 }
 const login_post = async (req,res,next) =>{
-     const companyName = paraseCompanyName(req.body.username)
     const password = req.body.password
-    //const username = req.body.username
-    const email = req.body.username
+    const username = req.body.username
+    const email = req.body.email
+    var companyName = "";
+    var usernameOrEmail= ""
+    if (email != null) {
+        companyName = paraseCompanyName(email)
+        usernameOrEmail=email
+    }
+    else if (username != null) {
+        companyName = paraseCompanyNameFromUsername(username)
+        usernameOrEmail=username
+    }
+    console.log(companyName)
+    try {
+        //check if company is defined
+        if (!(await company_Exist(companyName))) {
+            console.log(`The company ${companyName} is not registered.`)
 
+            return res.status(404).json({
+                errors: {
+                    status: `The company ${companyName} is not registered.`,
+                },
+            });
+        }
 
-
-
-    // Look up the company in your database to ensure it exists
-
-    try{
-         //check if company is defined
-         if(!(await company_Exist(companyName))) return res.status(404).json({
-             errors: {
-                 status: `The company ${companyName} is not registered.`,
-             },
-         });
         req.companyName = companyName;
         //1)  Determine the tenant company database
 
-        const companyDB = await switchDB(companyName,'employee', userSchema)
+        const companyDB = await switchDB(companyName, 'employee', userSchema)
         //2) point to users collections in companyDB
-        const userModel= await getDBModel(companyDB,'employee',userSchema)
+        const userModel = await getDBModel(companyDB, 'employee', userSchema)
         let user
         //check if email or password or username exist in input
-        if(email && !password) return next(new AppError ('Please provide email and password!',400))
-
+        if (usernameOrEmail && !password) return next(new AppError('Please provide email and password!', 400))
         //check if the input was email or username
-        if (email != null)  user = await userModel.findOne({email}).select('+password')
-        console.log('user: '+ user)
+        if (email != null) {
+            user = await userModel.findOne({email}).select('+password')
+
+        }
+        else if (username != null) {
+            user = await userModel.findOne({username}).select('+password')
+
+        }
+        console.log('user: ' + user)
         if (!user) {
             return res.status(401).json({
                 errors: {
@@ -208,8 +234,8 @@ const login_post = async (req,res,next) =>{
             });
         }
         //if user exists in database
-
-        const auth =  await bcrypt.compare(password, user.password)
+        const auth = await bcrypt.compare(password, user.password)
+        console.log(auth)
 
         if (!user || !auth) {
             return res.status(401).json({
@@ -217,11 +243,11 @@ const login_post = async (req,res,next) =>{
                     status: 'Incorrect email or password',
                 },
             });
-        }else{ //if user exists in db
+        } else { //if user exists in db
             //if password is correct after comparing
-            const token = createToken(user._id, user.email, user.role, user.firstName,user.lastName,user.username,user.companyName)
+            const token = createToken(user._id, user.email, user.role, user.firstName, user.lastName, user.username, user.companyName)
             //sending the token as a cookie to frontend
-             createCookie(token,res)
+            createCookie(token, res)
             res.status(201).json({
                 user: {
                     username: user.username,
@@ -232,21 +258,19 @@ const login_post = async (req,res,next) =>{
                 status: 'success',
             }) // send back to frontend as json body
         }
-    }catch (e) {
+    } catch (e) {
         const error = handleErrors(e)
-        res.status(400).json({error})
+        res.status(400).json({ error })
     }
 
 }
 
-const maxAge = 3 * 24 * 60 * 60;
-//takes user id from database
 const createToken = (id,email, role,firstName,lastName,username,companyName)=>{
-        //All data we want to save into the token ; save user id in the token
+        //All data we want to save into the token
     return jwt.sign(
         {id, email, role,firstName,lastName,username,companyName},
         process.env.SECRET_CODE, {
-        expiresIn: process.env.JWT_COOKIE_EXPIRES_IN // 3 days
+        expiresIn: process.env.JWT_COOKIE_EXPIRES_IN
     })
 }
 

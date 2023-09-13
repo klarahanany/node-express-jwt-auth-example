@@ -117,6 +117,8 @@ const forgetPass_post = async (req, res) => {
 
         // const secret = process.env.SECRET_CODE + oldUser.password
         const token = await jwt.sign({ email: oldUser.email, id: oldUser._id , companyName}, secret, { expiresIn: '50m' });
+       // const resetToken = userModel.createPasswordResetToken()
+      //  await userModel.save();
         const link = `http://localhost:3001/resetPass/${oldUser._id}/${token}`
         console.log(link)
 
@@ -132,7 +134,7 @@ const forgetPass_post = async (req, res) => {
         var mailOptions = {
             from: 'lart0242@gmail.com',
             to: email,
-            subject: 'Sending Email using Node.js',
+            subject: 'Forgot password',
             text: link
         };
 
