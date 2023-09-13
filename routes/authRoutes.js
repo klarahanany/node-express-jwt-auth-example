@@ -10,7 +10,7 @@ router.get('/login', authController.login_get)
 router.post('/login', authController.login_post)
 
 router.get('/logout', authController.logout_get)
-
+router.post('/changePassword', authController.changePassword_post)
 router.get('/loginError' ,(req,res)=>{
     res.render('loginError')
 })

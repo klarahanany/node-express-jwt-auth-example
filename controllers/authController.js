@@ -180,21 +180,22 @@ const company_Exist= async(companyName)=>{
     const adminsModel= await getDBModel(MainDB,'admins',userSchema)
     return await adminsModel.findOne({companyName})
 }
-const login_post = async (req,res,next) =>{
+
+
+const login_post = async (req, res, next) => {
     const password = req.body.password
     const username = req.body.username
     const email = req.body.email
     var companyName = "";
-    var usernameOrEmail= ""
+    var usernameOrEmail = ""
     if (email != null) {
         companyName = paraseCompanyName(email)
-        usernameOrEmail=email
+        usernameOrEmail = email
     }
     else if (username != null) {
         companyName = paraseCompanyNameFromUsername(username)
-        usernameOrEmail=username
+        usernameOrEmail = username
     }
-    console.log(companyName)
     try {
         //check if company is defined
         if (!(await company_Exist(companyName))) {
@@ -218,11 +219,11 @@ const login_post = async (req,res,next) =>{
         if (usernameOrEmail && !password) return next(new AppError('Please provide email and password!', 400))
         //check if the input was email or username
         if (email != null) {
-            user = await userModel.findOne({email}).select('+password')
+            user = await userModel.findOne({ email }).select('+password')
 
         }
         else if (username != null) {
-            user = await userModel.findOne({username}).select('+password')
+            user = await userModel.findOne({ username }).select('+password')
 
         }
         console.log('user: ' + user)
@@ -252,9 +253,12 @@ const login_post = async (req,res,next) =>{
                 user: {
                     username: user.username,
                     firstName: user.firstName,
-                    lastName: user.lastName
-                },
+                    lastName: user.lastName,
+                    role: user.role,
+                    passwordChangedAt: user.passwordChangedAt,
+                    company: companyName,
 
+                },
                 status: 'success',
             }) // send back to frontend as json body
         }
@@ -263,6 +267,65 @@ const login_post = async (req,res,next) =>{
         res.status(400).json({ error })
     }
 
+}
+
+
+
+const changePassword_post = async (req, res, next) => {
+    console.log(req.body)
+    const oldPassword = req.body.oldPassword
+    const newPassword = req.body.newPassword
+    const username = req.body.username
+    if (oldPassword == null || newPassword == null) {
+        res.status(401).json({
+            success: flase,
+        })
+    }
+    try {
+        var companyName = paraseCompanyNameFromUsername(username)
+        const companyDB = await switchDB(companyName, 'employee', userSchema)
+        //2) point to users collections in companyDB
+        const userModel = await getDBModel(companyDB, 'employee', userSchema)
+        let user
+        if (username != null) {
+            user = await userModel.findOne({ username }).select('+password')
+        }
+        //if user exists in database
+        const auth = await bcrypt.compare(oldPassword, user.password)
+        console.log(auth)
+        if (!auth) {
+            return res.json({
+                status:"incorrect old password"
+            });
+        }
+        else { //if user exists in db
+            const encryptedPass = await bcrypt.hash(newPassword, 10)
+            let today = new Date()
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+
+            const formattedDate = `${year}-${month}-${day}`;
+            let myQuery = {_id : user.id};
+            let newValue = { $set: {password: encryptedPass ,passwordChangedAt: formattedDate} };
+            await userModel.updateOne(myQuery,newValue)
+            res.status(201).json({
+                user: {
+                    username: user.username,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    role: user.role,
+                    passwordChangedAt: user.passwordChangedAt,
+                    company: companyName,
+
+                },
+                status: 'success',
+            }) // send back to frontend as json body
+        }
+    } catch (e) {
+        const error = handleErrors(e)
+        res.status(400).json({ error })
+    }
 }
 
 const createToken = (id,email, role,firstName,lastName,username,companyName)=>{
@@ -295,4 +358,8 @@ const restrictTo = (...roles) => {
 };
 
 
-module.exports = {signup_get,signup_post,login_post,login_get,logout_get,restrictTo, company_Exist, paraseCompanyName}
+module.exports = {
+    signup_get,signup_post,
+    login_post,login_get,logout_get,
+    restrictTo,
+    company_Exist, paraseCompanyName,changePassword_post}
