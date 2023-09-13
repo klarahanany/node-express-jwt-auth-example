@@ -6,7 +6,7 @@ const router = require("express").Router();
 
 const jwt = require("jsonwebtoken");
 
-const passport = require('../config/passportSetup')
+const passport = require('../google-auth/passportSetup')
 function generateAccessToken(user) {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: process.env.ACCESS_TOKEN_EXPIERS_IN,
